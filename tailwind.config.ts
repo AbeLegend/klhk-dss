@@ -9,6 +9,74 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontSize: {
+        "heading-1": [
+          "40px",
+          {
+            lineHeight: "48px",
+            letterSpacing: "-0.8px",
+          },
+        ],
+        "heading-2": [
+          "36px",
+          {
+            lineHeight: "44px",
+            letterSpacing: "-0.72px",
+          },
+        ],
+        "heading-3": [
+          "32px",
+          {
+            lineHeight: "40px",
+            letterSpacing: "-0.64px",
+          },
+        ],
+        "heading-4": [
+          "28px",
+          {
+            lineHeight: "36px",
+            letterSpacing: "-0.56px",
+          },
+        ],
+        "heading-5": [
+          "24px",
+          {
+            lineHeight: "32px",
+            letterSpacing: "-0.48px",
+          },
+        ],
+        "heading-6": [
+          "20px",
+          {
+            lineHeight: "28px",
+            letterSpacing: "-0.4px",
+          },
+        ],
+        "body-1": [
+          "18px",
+          {
+            lineHeight: "28px",
+          },
+        ],
+        "body-2": [
+          "16px",
+          {
+            lineHeight: "24px",
+          },
+        ],
+        "body-3": [
+          "14px",
+          {
+            lineHeight: "20px",
+          },
+        ],
+        "caption": [
+          "12px",
+          {
+            lineHeight: "20px",
+          },
+        ],
+      },
       colors: {
         primary: {
           DEFAULT: "rgb(var(--color-primary-default) / <alpha-value>)",
