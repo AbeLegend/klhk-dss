@@ -141,6 +141,11 @@ const config: Config = {
           900: "rgb(var(--color-error-900) / <alpha-value>)",
         },
       },
+      screens: {
+        'mobile': '320px',
+        'tablet': '768px',
+        'desktop': '1280px',
+      },
     },
   },
   plugins: [
