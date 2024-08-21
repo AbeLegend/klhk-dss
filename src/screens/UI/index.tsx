@@ -2,6 +2,7 @@ import {
   UIBoxShadow,
   UIColor,
   UIInput,
+  UITextArea,
   UITypography,
 } from "@/components/templates";
 import { FC } from "react";
@@ -13,6 +14,7 @@ const UI: FC = () => {
       <UITypography />
       <UIBoxShadow />
       <UIInput />
+      <UITextArea />
     </main>
   );
 };
