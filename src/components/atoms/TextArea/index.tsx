@@ -60,11 +60,12 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
           />
         </div>
         <div className="flex justify-between text-body-3 text-gray-500">
-          {description && (
-            <p className={cn([error && "text-error-500"])}>
-              {error ? errorMessage : description}
-            </p>
-          )}
+          {description ||
+            (errorMessage && (
+              <p className={cn([error && "text-error-500"])}>
+                {error ? errorMessage : description}
+              </p>
+            ))}
           {counter && maxLength && (
             <p className={cn([error && "text-error-500"])}>
               {`${currentLength}/${maxLength}`}

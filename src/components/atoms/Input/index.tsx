@@ -57,19 +57,17 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           />
           {rightIcon && <div className="ml-2 text-gray-400">{rightIcon}</div>}
         </div>
-        {description && (
-          <p
-            className={cn([
-              "text-body-3 text-gray-500",
-              error && "text-error-500",
-            ])}
-          >
-            {description}
-          </p>
-        )}
-        {error && errorMessage && (
-          <p className="text-body-3 text-error-500">{errorMessage}</p>
-        )}
+        {description ||
+          (errorMessage && (
+            <p
+              className={cn([
+                "text-body-3 text-gray-500",
+                error && "text-error-500",
+              ])}
+            >
+              {error ? errorMessage : description}
+            </p>
+          ))}
       </div>
     );
   }
