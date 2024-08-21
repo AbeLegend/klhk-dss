@@ -1,4 +1,4 @@
-import { UIColor, UITypography } from "@/components/templates";
+import { UIBoxShadow, UIColor, UITypography } from "@/components/templates";
 import { FC } from "react";
 
 const UI: FC = () => {
@@ -6,6 +6,7 @@ const UI: FC = () => {
     <main className="flex gap-x-10 flex-wrap">
       <UIColor />
       <UITypography />
+      <UIBoxShadow />
     </main>
   );
 };
