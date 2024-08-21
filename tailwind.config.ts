@@ -146,6 +146,23 @@ const config: Config = {
         'tablet': '768px',
         'desktop': '1280px',
       },
+      boxShadow: {
+        // Drop shadows
+        'xsmall': '0px 1px 2px 0px rgba(16, 24, 40, 0.05)',
+        'small': '0px 1px 3px 0px rgba(16, 24, 40, 0.10), 0px 1px 2px -1px rgba(16, 24, 40, 0.10)',
+        'medium': '0px 4px 6px -1px rgba(16, 24, 40, 0.10), 0px 2px 4px -2px rgba(16, 24, 40, 0.10)',
+        'large': '0px 10px 15px -3px rgba(16, 24, 40, 0.10), 0px 4px 6px -4px rgba(16, 24, 40, 0.10)',
+        'xlarge': '0px 20px 25px -5px rgba(16, 24, 40, 0.10), 0px 8px 10px -6px rgba(16, 24, 40, 0.10)',
+        'xxlarge': '0px 25px 50px -12px rgba(16, 24, 40, 0.25)',
+
+        // Focus rings
+        'focus-primary': '0px 0px 0px 1px #2196F3',
+        'focus-gray': '0px 0px 0px 4px #F3F4F6',
+        'focus-primary-light': '0px 0px 0px 4px #BBDEFB',
+        'focus-success': '0px 0px 0px 4px #C8E6C9',
+        'focus-warning': '0px 0px 0px 4px #FFECB3',
+        'focus-error': '0px 0px 0px 4px #F8BBD0',
+      },
     },
   },
   plugins: [
