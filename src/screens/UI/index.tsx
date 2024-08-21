@@ -1,4 +1,9 @@
-import { UIBoxShadow, UIColor, UITypography } from "@/components/templates";
+import {
+  UIBoxShadow,
+  UIColor,
+  UIInput,
+  UITypography,
+} from "@/components/templates";
 import { FC } from "react";
 
 const UI: FC = () => {
@@ -7,6 +12,7 @@ const UI: FC = () => {
       <UIColor />
       <UITypography />
       <UIBoxShadow />
+      <UIInput />
     </main>
   );
 };
