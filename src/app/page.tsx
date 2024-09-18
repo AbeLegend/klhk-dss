@@ -1,9 +1,9 @@
-import UI from "@/screens/UI";
+import { DashboardRootScreen } from "@/screens";
 
 export default function Home() {
   return (
     <main className="">
-      <UI />
+      <DashboardRootScreen />
     </main>
   );
 }
