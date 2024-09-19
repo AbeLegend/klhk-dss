@@ -5,11 +5,15 @@ import * as Yup from "yup";
 import { useFormik } from "formik";
 import ReCAPTCHA from "react-google-recaptcha";
 import Cookies from "js-cookie";
+// import Image from "next/image";
 
 // local
 import { postAPIUserLogin } from "@/api/responses/(user)";
 import { cn, COOKIE_TOKEN, encryptText } from "@/lib";
-import { Input } from "@/components/atoms";
+import { Input, SVGIcon } from "@/components/atoms";
+// asset
+import IlustrationSVG from "@/icons/ilustration-dummy.svg";
+// import LogoFullImage from "@/images/logo/logo-full.png";
 
 // type
 interface FormValuesType {
@@ -51,7 +55,7 @@ export const LoginScreen: FC = () => {
           });
           if (status === 200) {
             const tokenFromAPI = data.Data.RawToken;
-            console.log(data.Data);
+            // console.log(data.Data)
 
             // Enkripsi token
             const encryptedToken = encryptText(tokenFromAPI);
@@ -65,7 +69,7 @@ export const LoginScreen: FC = () => {
             });
 
             // Arahkan pengguna ke halaman dashboard atau home
-            window.location.href = "/";
+            window.location.href = "/dashboard";
           }
         }
       } catch (err) {
@@ -78,8 +82,21 @@ export const LoginScreen: FC = () => {
 
   return (
     <main className="grid grid-cols-12 h-screen bg-white">
-      <div className="col-span-6 flex flex-col justify-center">
-        <h1 className="text-center font-medium">DSS KLHK</h1>
+      <div className="col-span-6 flex flex-col justify-center relative">
+        {/* <div className="absolute top-0 left-0">
+          <div className="relative h-[59px] w-[302px] bg-black">
+            <Image src={LogoFullImage} alt="logo" layout="fill" />
+          </div>
+        </div> */}
+        <div>
+          <SVGIcon
+            Component={IlustrationSVG}
+            width={600}
+            height={300}
+            className="mx-auto"
+          />
+        </div>
+        {/* <h1 className="text-center font-medium">DSS KLHK</h1> */}
       </div>
       <div className="col-span-6 flex items-center">
         <form onSubmit={form.handleSubmit} className="w-2/3 mx-auto">

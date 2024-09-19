@@ -3,15 +3,22 @@
 import { FC } from "react";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
+import dynamic from "next/dynamic";
+
 // local
 import { COOKIE_TOKEN, decryptText } from "@/lib";
-import { useRouter } from "next/navigation";
+const ArcGISMap = dynamic(
+  () => import("../../../components/organisms/MapView"),
+  {
+    ssr: false,
+  }
+);
 
 export const DashboardRootScreen: FC = () => {
-  const router = useRouter();
   return (
-    <main className="flex gap-x-10 flex-wrap">
+    <main className="flex gap-x-10 flex-wrap bg-primary">
       <h1
+        className="hidden"
         onClick={() => {
           const token = Cookies.get(COOKIE_TOKEN);
           if (token) {
@@ -23,14 +30,13 @@ export const DashboardRootScreen: FC = () => {
       >
         Dashboard
       </h1>
-      <button
-        onClick={() => {
-          Cookies.remove(COOKIE_TOKEN);
-          router.push("/login");
-        }}
-      >
-        Logout
-      </button>
+
+      <div className="w-full h-[10%] max-h-[10%]">
+        {/* <div className="relative -top-4 bg-white rounded-t-[32px]"> */}
+        <ArcGISMap />
+        {/* <h1>tes</h1> */}
+        {/* </div> */}
+      </div>
     </main>
   );
 };
