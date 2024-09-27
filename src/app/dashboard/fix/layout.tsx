@@ -1,5 +1,4 @@
 // lib
-import { Navbar } from "@/components/templates";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -7,15 +6,10 @@ export const metadata: Metadata = {
   description: "DSS KLHK",
 };
 
-export default function DashboardLayout({
+export default function DashboardFixLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
-    <section>
-      {/* <Navbar /> */}
-      {children}
-    </section>
-  );
+  return <section>{children}</section>;
 }
