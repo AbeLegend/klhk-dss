@@ -1,11 +1,12 @@
 "use client";
 // lib
-import { FC, useEffect, useRef, useState } from "react";
-import MapView from "@arcgis/core/views/MapView";
-import WebMap from "@arcgis/core/WebMap";
+import { FC, ReactNode, useEffect, useRef, useState } from "react";
+// import MapView from "@arcgis/core/views/MapView";
+// import WebMap from "@arcgis/core/WebMap";
 // import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import "@arcgis/core/assets/esri/themes/light/main.css";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 
 // local
 import { cn, copyToClipboard } from "@/lib";
@@ -17,62 +18,17 @@ import LocationCrosshairsSVG from "@/icons/location-crosshairs.svg";
 import SearchSVG from "@/icons/search.svg";
 import { ContainerData, ContainerInformation } from "@/components/molecules";
 
+const MapComponent = dynamic(() => import("@/components/organisms/MapFix"), {
+  ssr: false,
+});
+
 export const DashboardRoot2Screen: FC = () => {
-  // useRef
-  const mapRef = useRef<HTMLDivElement>(null);
-  // useState
-  const [isMapLoaded, setIsMapLoaded] = useState<boolean>(false);
-
-  useEffect(() => {
-    if (mapRef.current) {
-      const webMap = new WebMap({
-        basemap: "topo-vector",
-        // portalItem: {
-        //   id: "8d91bd39e873417ea21673e0fee87604",
-        // },
-      });
-      const view = new MapView({
-        container: mapRef.current,
-        map: webMap,
-        center: [120.0, 0.0],
-        zoom: 5,
-      });
-      const abortController = new AbortController();
-
-      view.ui.remove("zoom");
-
-      view
-        .when(() => {
-          console.log("Map loaded successfully!");
-          setIsMapLoaded(true);
-        })
-        .catch((error) => {
-          if (error.name === "AbortError") {
-            console.log("Loading the map was aborted");
-          } else {
-            console.error("Error loading the map:", error);
-          }
-        });
-      return () => {
-        abortController.abort();
-        if (view) {
-          view.destroy();
-        }
-      };
-    }
-  }, [isMapLoaded]);
-
   return (
     <main>
-      <div ref={mapRef} className={cn(["h-screen w-full"])}>
-        {/* <div className={cn(["h-screen w-full bg-black"])}> */}
-        {isMapLoaded && (
-          <>
-            <Navbar />
-            <Sidebar />
-          </>
-        )}
-      </div>
+      <MapComponent>
+        <Navbar />
+        <Sidebar />
+      </MapComponent>
     </main>
   );
 };
