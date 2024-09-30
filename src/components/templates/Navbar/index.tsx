@@ -17,7 +17,10 @@ import MonitoringSVG from "@/icons/monitoring.svg";
 import { COOKIE_TOKEN } from "@/lib";
 
 export const Navbar: FC = () => {
+  // useRouter
   const router = useRouter();
+  const activeClassName = "";
+  const inActiveClassName = "";
   return (
     <nav className="bg-primary w-full px-10">
       {/* <div className="pt-4 pb-12 mx-auto grid grid-cols-12"> */}

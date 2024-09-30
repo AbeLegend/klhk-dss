@@ -1,3 +1,4 @@
+export * from "./data"
 export * from "./font"
 export * from "./secure"
 export * from "./util"
