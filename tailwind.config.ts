@@ -163,6 +163,10 @@ const config: Config = {
         'focus-warning': '0px 0px 0px 4px #FFECB3',
         'focus-error': '0px 0px 0px 4px #F8BBD0',
       },
+      backgroundImage: {
+        'gray-gradient': 'linear-gradient(152deg, rgba(249, 250, 251, 0.90) 17.43%, rgba(217, 236, 255, 0.83) 103.5%)',
+
+      }
     },
   },
   plugins: [

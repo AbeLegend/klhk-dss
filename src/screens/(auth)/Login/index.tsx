@@ -55,7 +55,7 @@ export const LoginScreen: FC = () => {
           });
           if (status === 200) {
             const tokenFromAPI = data.Data.RawToken;
-            // console.log(data.Data)
+            // console.log(data.Data);
 
             // Enkripsi token
             const encryptedToken = encryptText(tokenFromAPI);
@@ -143,6 +143,7 @@ export const LoginScreen: FC = () => {
               sitekey={SITE_KEY}
               onChange={(e) => {
                 if (e) {
+                  // console.log(e);
                   setToken(e);
                 }
               }}
