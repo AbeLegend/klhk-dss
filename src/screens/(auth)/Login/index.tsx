@@ -112,7 +112,7 @@ export const LoginScreen: FC = () => {
             onBlur={form.handleBlur}
             name="Username"
             id="Username"
-            className="text-body-3"
+            containerClassName="text-body-3"
             error={form.touched.Username && Boolean(form.errors.Username)}
             errorMessage={
               form.errors.Username && form.touched.Username
@@ -126,7 +126,7 @@ export const LoginScreen: FC = () => {
             onBlur={form.handleBlur}
             name="Password"
             id="Password"
-            className="text-body-3"
+            containerClassName="text-body-3"
             error={form.touched.Password && Boolean(form.errors.Password)}
             errorMessage={
               form.errors.Password && form.touched.Password
