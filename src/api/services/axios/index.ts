@@ -1,45 +1,56 @@
+// lib
 import axios, { InternalAxiosRequestConfig } from "axios";
 import Cookies from "js-cookie";
+// local
+import { decryptText } from "@/lib";
 
+// Konfigurasi base URL dan versi API
 const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-const apiVersion = process.env.NEXT_PUBLIC_API_VERSION
+const apiVersion = process.env.NEXT_PUBLIC_API_VERSION;
+
+// Membuat instance Axios dengan base URL
 const fetch = axios.create({
   baseURL: `${apiUrl}/${apiVersion}`,
 });
 
-interface InterceptorConfig extends InternalAxiosRequestConfig<any> {
-  withAuthToken?: boolean;
-}
-
-// Add a request interceptor
+// Menambahkan interceptor request untuk menyertakan Bearer token
 fetch.interceptors.request.use(
-  function ({ withAuthToken = true, ...config }: InterceptorConfig) {
-    // Get the token from cookies
+  (config: InternalAxiosRequestConfig) => {
+    // Mengambil token dari cookies
     const token = Cookies.get("token");
 
-    // If token exists, add it to the headers
-    if (token && withAuthToken) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // Jika token ada, dekripsi dan tambahkan ke header Authorization
+    if (token) {
+      try {
+        const decryptToken = decryptText(token);
+        config.headers.Authorization = `Bearer ${decryptToken}`;
+      } catch (error) {
+        console.error("Token decryption failed:", error);
+      }
     }
 
     return config;
   },
-  function (error) {
-    // Do something with request error
+  (error) => {
+    // Menangani error request
     return Promise.reject(error);
   }
 );
 
-// Add a response interceptor
+// Menambahkan interceptor response untuk menangani respons API
 fetch.interceptors.response.use(
-  function (response) {
-    // Any status code that lie within the range of 2xx cause this function to trigger
-    // Do something with response data
+  (response) => {
+    // Respons sukses
     return response;
   },
-  function (error) {
-    // Any status codes that falls outside the range of 2xx cause this function to trigger
-    // Do something with response error
+  (error) => {
+    // Menangani error respons
+    console.error("Axios response error:", error);
+    if (error.response) {
+      console.error("Status:", error.response.status);
+      console.error("Headers:", error.response.headers);
+      console.error("Data:", error.response.data);
+    }
     return Promise.reject(error);
   }
 );

@@ -5,15 +5,15 @@ import * as Yup from "yup";
 import { useFormik } from "formik";
 import ReCAPTCHA from "react-google-recaptcha";
 import Cookies from "js-cookie";
-// import Image from "next/image";
+import { useSearchParams, useRouter } from "next/navigation";
 
 // local
 import { postAPIUserLogin } from "@/api/responses/(user)";
 import { cn, COOKIE_TOKEN, encryptText } from "@/lib";
 import { Input, SVGIcon } from "@/components/atoms";
+
 // asset
 import IlustrationSVG from "@/icons/ilustration-dummy.svg";
-// import LogoFullImage from "@/images/logo/logo-full.png";
 
 // type
 interface FormValuesType {
@@ -23,7 +23,7 @@ interface FormValuesType {
 const SITE_KEY = process.env.NEXT_PUBLIC_SITE_KEY as string;
 
 export const LoginScreen: FC = () => {
-  // useState
+  // State
   const [initialValues, setInitialValues] = useState<FormValuesType>({
     Username: "",
     Password: "",
@@ -31,13 +31,17 @@ export const LoginScreen: FC = () => {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // schema
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirectTo");
+
+  // Schema untuk validasi
   const validationSchema = Yup.object({
     Username: Yup.string().required("Username is required"),
     Password: Yup.string().required("Password is required"),
   });
 
-  // form
+  // Formik untuk menangani form
   const form = useFormik<FormValuesType>({
     initialValues,
     validationSchema,
@@ -53,23 +57,24 @@ export const LoginScreen: FC = () => {
             Password: form.values.Password,
             Username: form.values.Username,
           });
+
           if (status === 200) {
             const tokenFromAPI = data.Data.RawToken;
-            // console.log(data.Data);
+            // console.log(tokenFromAPI);
 
-            // Enkripsi token
             const encryptedToken = encryptText(tokenFromAPI);
 
-            // Simpan token yang telah dienkripsi di cookie
             Cookies.set(COOKIE_TOKEN, encryptedToken, {
-              secure: true, // Set agar cookie hanya digunakan pada koneksi HTTPS
-              httpOnly: false, // Pada client side, httpOnly tidak bisa digunakan, harus diatur di server
-              sameSite: "Strict", // Set SameSite untuk menghindari CSRF
-              // expires: 7, // Token berlaku selama 7 hari
+              secure: true,
+              httpOnly: false,
+              sameSite: "Strict",
             });
 
-            // Arahkan pengguna ke halaman dashboard atau home
-            window.location.href = "/dashboard";
+            if (redirectTo) {
+              router.push(redirectTo);
+            } else {
+              router.push("/dashboard");
+            }
           }
         }
       } catch (err) {
@@ -83,11 +88,6 @@ export const LoginScreen: FC = () => {
   return (
     <main className="grid grid-cols-12 h-screen bg-white">
       <div className="col-span-6 flex flex-col justify-center relative">
-        {/* <div className="absolute top-0 left-0">
-          <div className="relative h-[59px] w-[302px] bg-black">
-            <Image src={LogoFullImage} alt="logo" layout="fill" />
-          </div>
-        </div> */}
         <div>
           <SVGIcon
             Component={IlustrationSVG}
@@ -96,7 +96,6 @@ export const LoginScreen: FC = () => {
             className="mx-auto"
           />
         </div>
-        {/* <h1 className="text-center font-medium">DSS KLHK</h1> */}
       </div>
       <div className="col-span-6 flex items-center">
         <form onSubmit={form.handleSubmit} className="w-2/3 mx-auto">
@@ -143,7 +142,6 @@ export const LoginScreen: FC = () => {
               sitekey={SITE_KEY}
               onChange={(e) => {
                 if (e) {
-                  // console.log(e);
                   setToken(e);
                 }
               }}

@@ -21,9 +21,10 @@
   h6 {
     @apply text-heading-6;
   }
-  /* .esri-view .esri-view-surface--inset-outline:focus::after {
-    outline: none !important;
-  } */
+
+  .inter-font {
+    font-family: "Inter", sans-serif;
+  }
 }
 
 @layer utilities {
