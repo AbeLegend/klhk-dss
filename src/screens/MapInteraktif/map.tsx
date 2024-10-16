@@ -32,19 +32,26 @@ const MapComponent: FC<{ children: ReactNode }> = ({ children }) => {
   // useState
   const [isMapLoaded, setIsMapLoaded] = useState<boolean>(false);
   const [view, setView] = useState<MapView | null>(null);
+  const [layerMap, setLayerMap] = useState<Map<number, FeatureLayer>>(
+    new Map()
+  );
   // useDispatch
   const dispatch = useDispatch();
   // useAppSelector
   const { layer } = useAppSelector((state) => state.mapInteraktif);
 
-  // function
+  // function to add or remove layers
   const getUrlFromLayer = () => {
     if (layer.length > 0) {
-      const activeLayer: LayerProps[] = layer.filter(
+      const activeLayers = layer.filter(
         (item) => item.isActive && !item.isUsed
       );
-      if (activeLayer.length > 0) {
-        const filteredLayer: UsedLayerProps[] = activeLayer.map((item) => {
+      const inactiveLayers = layer.filter(
+        (item) => !item.isActive && !item.isUsed
+      );
+
+      if (activeLayers.length > 0) {
+        const filteredLayer: UsedLayerProps[] = activeLayers.map((item) => {
           const path = item.Url;
           const urlFixed = getPathFromUrl(path);
           const paramUrl = extractMapNumber(urlFixed);
@@ -57,6 +64,10 @@ const MapComponent: FC<{ children: ReactNode }> = ({ children }) => {
         });
         fetchLayerInfo(filteredLayer);
       }
+
+      if (inactiveLayers.length > 0) {
+        removeLayers(inactiveLayers.map((item) => item.Id));
+      }
     }
   };
 
@@ -67,6 +78,8 @@ const MapComponent: FC<{ children: ReactNode }> = ({ children }) => {
           const { id, isUsed, paramUrl, url } = item;
 
           if (!isUsed && view) {
+            let featureLayer: FeatureLayer;
+
             if (paramUrl === null) {
               // Fetching the details of all layers if no specific paramUrl is defined
               const response = await fetch(`/klhk-dss${url}?f=json`);
@@ -75,19 +88,21 @@ const MapComponent: FC<{ children: ReactNode }> = ({ children }) => {
               if (data.layers) {
                 // Iterate over the available layers and add them to the map
                 data.layers.forEach((layerInfo: any) => {
-                  const featureLayer = new FeatureLayer({
+                  featureLayer = new FeatureLayer({
                     url: `/klhk-dss${url}/${layerInfo.id}`,
                   });
                   view.map.add(featureLayer);
+                  layerMap.set(id, featureLayer);
                   console.log(`Layer added: ${url}/${layerInfo.id}`);
                 });
               }
             } else {
               // Add a specific layer using the paramUrl
-              const featureLayer = new FeatureLayer({
+              featureLayer = new FeatureLayer({
                 url: `/klhk-dss${url}`,
               });
               view.map.add(featureLayer);
+              layerMap.set(id, featureLayer);
               console.log(`Single layer added: ${url}`);
             }
 
@@ -106,6 +121,30 @@ const MapComponent: FC<{ children: ReactNode }> = ({ children }) => {
       }
     } catch (error) {
       console.error("Error fetching layer info:", error);
+    }
+  };
+
+  const removeLayers = (layerIds: number[]) => {
+    if (view && layerIds.length > 0) {
+      layerIds.forEach((id) => {
+        const layerToRemove = layerMap.get(id);
+        if (layerToRemove) {
+          view.map.remove(layerToRemove);
+          layerMap.delete(id);
+          console.log(`Layer removed with ID: ${id}`);
+
+          // Mark the layer as unused
+          dispatch(
+            updateLayer({
+              id: id,
+              updatedData: {
+                isActive: false,
+                isUsed: false,
+              },
+            })
+          );
+        }
+      });
     }
   };
 
