@@ -3,6 +3,7 @@
 import { FC, ReactNode, useEffect, useRef, useState } from "react";
 import MapView from "@arcgis/core/views/MapView";
 import WebMap from "@arcgis/core/WebMap";
+import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import "@arcgis/core/assets/esri/themes/light/main.css";
 import { useAppSelector } from "@/redux/store";
 
@@ -30,6 +31,7 @@ const MapComponent: FC<{ children: ReactNode }> = ({ children }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   // useState
   const [isMapLoaded, setIsMapLoaded] = useState<boolean>(false);
+  const [view, setView] = useState<MapView | null>(null);
   // useDispatch
   const dispatch = useDispatch();
   // useAppSelector
@@ -57,37 +59,49 @@ const MapComponent: FC<{ children: ReactNode }> = ({ children }) => {
       }
     }
   };
+
   const fetchLayerInfo = async (data: UsedLayerProps[]) => {
     try {
       if (data.length > 0) {
         for (const item of data) {
           const { id, isUsed, paramUrl, url } = item;
 
-          if (!isUsed) {
-            // console.log("position", url);
+          if (!isUsed && view) {
             if (paramUrl === null) {
+              // Fetching the details of all layers if no specific paramUrl is defined
               const response = await fetch(`/klhk-dss${url}?f=json`);
               const data = await response.json();
 
               if (data.layers) {
-                // console.log("Jumlah layer:", data.layers.length);
-                // console.log("URL fetched:", url);
-                // RENDER SEMUA LAYER DISINI
+                // Iterate over the available layers and add them to the map
+                data.layers.forEach((layerInfo: any) => {
+                  const featureLayer = new FeatureLayer({
+                    url: `/klhk-dss${url}/${layerInfo.id}`,
+                  });
+                  view.map.add(featureLayer);
+                  console.log(`Layer added: ${url}/${layerInfo.id}`);
+                });
               }
             } else {
-              // RENDER 1 LAYER DISINI
+              // Add a specific layer using the paramUrl
+              const featureLayer = new FeatureLayer({
+                url: `/klhk-dss${url}`,
+              });
+              view.map.add(featureLayer);
+              console.log(`Single layer added: ${url}`);
             }
+
+            // Mark the layer as used
+            dispatch(
+              updateLayer({
+                id: item.id,
+                updatedData: {
+                  isActive: true,
+                  isUsed: true,
+                },
+              })
+            );
           }
-          item.isUsed = true;
-          dispatch(
-            updateLayer({
-              id: item.id,
-              updatedData: {
-                isActive: true,
-                isUsed: true,
-              },
-            })
-          );
         }
       }
     } catch (error) {
@@ -99,34 +113,32 @@ const MapComponent: FC<{ children: ReactNode }> = ({ children }) => {
     if (mapRef.current) {
       const webMap = new WebMap({
         basemap: "topo-vector",
-        // portalItem: {
-        //   id: "8d91bd39e873417ea21673e0fee87604",
-        // },
       });
-      const view = new MapView({
+      const mapView = new MapView({
         container: mapRef.current,
         map: webMap,
         center: [120.0, 0.0],
         zoom: 5,
       });
 
-      // Menghapus kontrol zoom default
-      view.ui.remove("zoom");
+      // Remove default zoom controls
+      mapView.ui.remove("zoom");
 
-      // Menangani event ketika peta berhasil dimuat
-      view
+      // Handle the event when the map is loaded
+      mapView
         .when(() => {
           console.log("Map loaded successfully!");
           setIsMapLoaded(true);
+          setView(mapView);
         })
         .catch((error) => {
           console.error("Error loading the map:", error);
         });
 
-      // Cleanup saat komponen unmount
+      // Cleanup when the component unmounts
       return () => {
-        if (view) {
-          view.destroy();
+        if (mapView) {
+          mapView.destroy();
         }
       };
     }
