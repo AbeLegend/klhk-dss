@@ -42,7 +42,7 @@ export const DropdownLayer: FC<DropdownLayerProps> = ({
         </div>
       </div>
       {isOpen && (
-        <div className="bg-white pt-4 px-4 h-[278px] overflow-y-scroll rounded-b-lg">
+        <div className="bg-white py-4 px-4 max-h-[278px] overflow-y-scroll rounded-b-lg">
           {children}
         </div>
       )}

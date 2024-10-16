@@ -1,4 +1,5 @@
 export * from "./Button"
+export * from "./Chip"
 export * from "./ContainerChart"
 export * from "./ContainerCharts"
 export * from "./Dropdown"

@@ -2,11 +2,11 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Dashboard - DSS KLHK",
-  description: "DSS KLHK",
+  title: "Map Interaktif - DSS KLHK",
+  description: "Map Interaktif - DSS KLHK",
 };
 
-export default function DashboardFixLayout({
+export default function MapInteraktifLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;

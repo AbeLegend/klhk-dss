@@ -2,7 +2,7 @@
 // lib
 import Image from "next/image";
 import { FC, ReactNode, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Cookies from "js-cookie";
 import { RiArrowDropDownLine } from "react-icons/ri";
 
@@ -15,6 +15,8 @@ import { cn, COOKIE_TOKEN } from "@/lib";
 export const Navbar: FC = () => {
   // useRouter
   const router = useRouter();
+  // usePathname
+  const pathname = usePathname();
 
   return (
     <nav className="bg-primary w-full px-10">
@@ -64,8 +66,13 @@ export const Navbar: FC = () => {
             <Button
               label="Map Interaktif"
               variant="outline"
-              className="items-center"
+              className={cn(["items-center cursor-pointer"])}
               iconLeft={<Icon name="TrackingIcon" className="text-gray-700" />}
+              onClick={() => {
+                if (pathname !== "/map-interaktif") {
+                  router.push("/map-interaktif");
+                }
+              }}
             />
           </div>
           {/* END: Map Interactive */}

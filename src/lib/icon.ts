@@ -1,6 +1,7 @@
 
 import BellIcon from '@/icons/bell.svg';
 import ChevronDownIcon from '@/icons/chevron-down.svg';
+import DashboardMonitorIcon from '@/icons/dashboard-monitor.svg';
 import EmailIcon from '@/icons/email.svg';
 import IlustrationDownIcon from '@/icons/ilustration-dummy.svg';
 import LocationAltIcon from '@/icons/location-alt.svg';
@@ -15,6 +16,7 @@ import XIcon from '@/icons/x.svg';
 export const icons = {
   BellIcon,
   ChevronDownIcon,
+  DashboardMonitorIcon,
   EmailIcon,
   IlustrationDownIcon,
   LocationAltIcon,

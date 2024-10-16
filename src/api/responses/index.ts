@@ -7,4 +7,6 @@ export * from "./(util)/tahun";
 export * from "./(util)/tutupanLahan";
 // (simontana)
 export * from "./(simontana)/rekalkulasi";
+// (map)
+export * from "./(map)/webService";
 

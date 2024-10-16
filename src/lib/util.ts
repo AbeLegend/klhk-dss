@@ -58,3 +58,14 @@ export const generateUniqueColors = (count: number): string[] => {
 
   return colors;
 }
+
+
+export const getPathFromUrl = (fullUrl: string): string => {
+  const url = new URL(fullUrl);
+  return url.pathname;
+}
+
+export const extractMapNumber = (url: string): string | null => {
+  const match = url.match(/MapServer\/(\d+)/);
+  return match ? match[1] : null;
+}

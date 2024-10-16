@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 // local
 import "./globals.css";
 import { poppins } from "@/lib";
+import { ReduxProvider } from "@/redux/provider";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -16,7 +17,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={poppins.className}>{children}</body>
+      <body className={poppins.className}>
+        <ReduxProvider>{children}</ReduxProvider>
+      </body>
     </html>
   );
 }
