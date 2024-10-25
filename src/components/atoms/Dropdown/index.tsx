@@ -5,6 +5,7 @@ import { FiChevronDown, FiChevronUp } from "react-icons/fi";
 // local
 import { cn } from "@/lib";
 import { Input, SkeletonLoading } from "@/components/atoms";
+import { useClickOutside } from "@/hook";
 
 interface DropdownItem {
   label: string;
@@ -39,12 +40,16 @@ export const Dropdown: React.FC<DropdownProps> = ({
   loading = false,
   autoSelectFirstItem = false, // Default to false
 }) => {
+  // useState
   const [isOpen, setIsOpen] = useState(false);
   const [selectedItems, setSelectedItems] = useState<string[]>(defaultSelected);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [filteredItems, setFilteredItems] = useState<DropdownItem[]>(items);
 
+  // useRef
   const dropdownRef = useRef<HTMLDivElement>(null);
+  // useClickOutside
+  useClickOutside(dropdownRef, () => setIsOpen(false));
 
   const handleSelect = (value: string) => {
     if (disabled || loading) return;
@@ -86,22 +91,6 @@ export const Dropdown: React.FC<DropdownProps> = ({
       setSelectedItems(validSelectedItems);
     }
   }, [items, selectedItems]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [dropdownRef]);
 
   useEffect(() => {
     if (!isOpen) {

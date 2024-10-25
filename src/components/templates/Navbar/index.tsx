@@ -1,7 +1,7 @@
 "use client";
 // lib
 import Image from "next/image";
-import { FC, ReactNode, useEffect, useRef, useState } from "react";
+import { FC, ReactNode, useRef, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Cookies from "js-cookie";
 import { RiArrowDropDownLine } from "react-icons/ri";
@@ -11,6 +11,7 @@ import { Button, Icon } from "@/components/atoms";
 // assets
 import LogoFullImage from "@/images/logo/logo-full.png";
 import { cn, COOKIE_TOKEN } from "@/lib";
+import { useClickOutside } from "@/hook";
 
 export const Navbar: FC = () => {
   // useRouter
@@ -114,20 +115,7 @@ const Menu: FC<{
   const [isOpen, setIsOpen] = useState<boolean>(false);
   // useRef
   const divRef = useRef<HTMLDivElement>(null);
-
-  // useEffect
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (divRef.current && !divRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [divRef]);
+  useClickOutside(divRef, () => setIsOpen(false));
 
   return (
     <div

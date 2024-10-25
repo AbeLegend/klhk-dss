@@ -1,0 +1,139 @@
+{
+  "Data": [
+    {
+      "WebService": {
+        "Id": 14,
+        "CoverImage": null,
+        "CreateBy": "491874ce-92c0-4cfd-83b7-f916df7c219b|Admin",
+        "CreateDate": "2024-09-18T18:07:17.739198",
+        "IdReferenceSimontana": "",
+        "Title": "Informasi Wilayah",
+        "UpdateBy": null,
+        "UpdateDate": null,
+        "UriTitle": "informasi-wilayah",
+        "Url": "https://geoportal.menlhk.go.id/server/rest/services/SIGAP_Interaktif/Adm_KabKot_Sept2023/MapServer",
+        "Category": "Informasi Wilayah",
+        "GroupCategory": "Informasi",
+        "Group": {
+          "Id": 2,
+          "CreateBy": "491874ce-92c0-4cfd-83b7-f916df7c219b|Admin",
+          "CreateDate": "2024-10-08T07:49:53.457072",
+          "Title": "Laju Perubahan",
+          "UpdateBy": null,
+          "UpdateDate": null
+        }
+      },
+      "Properties": [
+        {
+          "OBJECTID": "282",
+          "NAMOBJ": "Katingan",
+          "FCODE": "",
+          "REMARK": " ",
+          "METADATA": "TASWIL5000020221227KABKOTA",
+          "SRS_ID": "4326",
+          "KDBBPS": "",
+          "KDCBPS": "",
+          "KDCPUM": "",
+          "KDEBPS": "",
+          "KDEPUM": "",
+          "KDPBPS": "",
+          "KDPKAB": "62.06",
+          "KDPPUM": "62",
+          "LUASWH": "",
+          "TIPADM": "",
+          "WADMKC": "",
+          "WADMKD": "",
+          "WADMKK": "Katingan",
+          "WADMPR": "Kalimantan Tengah",
+          "WIADKC": "",
+          "WIADKK": "",
+          "WIADPR": "",
+          "WIADKD": ""
+        }
+      ]
+    },
+    {
+      "WebService": {
+        "Id": 13,
+        "CoverImage": null,
+        "CreateBy": "491874ce-92c0-4cfd-83b7-f916df7c219b|Admin",
+        "CreateDate": "2024-09-18T18:07:17.739721",
+        "IdReferenceSimontana": "103",
+        "Title": "Kawasan Hutan",
+        "UpdateBy": null,
+        "UpdateDate": null,
+        "UriTitle": "kawasan-hutan",
+        "Url": "https://geoportal.menlhk.go.id/server/rest/services/SIGAP_Interaktif/Kawasan_Hutan/MapServer",
+        "Category": "Lainnya",
+        "GroupCategory": "Lainnya",
+        "Group": {
+          "Id": 5,
+          "CreateBy": "491874ce-92c0-4cfd-83b7-f916df7c219b|Admin",
+          "CreateDate": "2024-10-08T07:50:15.246594",
+          "Title": "Lainnya",
+          "UpdateBy": null,
+          "UpdateDate": null
+        }
+      },
+      "Properties": [
+        {
+          "OBJECTID": "3443",
+          "NO_REG": "0",
+          "KODE_PROV": "62",
+          "FUNGSIKWS": "100240",
+          "NOSKKWS": "529/Menhut-II/2012",
+          "TGLSKKWS": "9/25/2012 12:00:00 AM",
+          "LSKKWS": "12719707",
+          "NAMOBJ": "Bukit Baka - Bukit Raya",
+          "FCODE": "-",
+          "LCODE": " A3018AR",
+          "METADATA": "KWSHUTAN_AR_250K",
+          "SRS_ID": "EPSG 4326",
+          "REMARK": "Peta Perkembangan Pengukuhan Kawasan Hutan Tahun 2020"
+        }
+      ]
+    },
+    {
+      "WebService": {
+        "Id": 15,
+        "CoverImage": null,
+        "CreateBy": "491874ce-92c0-4cfd-83b7-f916df7c219b|Admin",
+        "CreateDate": "2024-09-18T18:07:17.739198",
+        "IdReferenceSimontana": "",
+        "Title": "Kesatuan Pengelolaan Hutan Konservasi (KPHK)",
+        "UpdateBy": null,
+        "UpdateDate": null,
+        "UriTitle": "kphk",
+        "Url": "https://geoportal.menlhk.go.id/server/rest/services/dgcfrhmh/KPH_AR_250K/MapServer/2",
+        "Category": "Kesatuan Pengelolaan Hutan Konservasi (KPHK)",
+        "GroupCategory": "Informasi",
+        "Group": {
+          "Id": 2,
+          "CreateBy": "491874ce-92c0-4cfd-83b7-f916df7c219b|Admin",
+          "CreateDate": "2024-10-08T07:49:53.457072",
+          "Title": "Laju Perubahan",
+          "UpdateBy": null,
+          "UpdateDate": null
+        }
+      },
+      "Properties": [
+        {
+          "OBJECTID": "57797",
+          "FUNGSIKWS": "TN",
+          "KODEPROV": "61",
+          "NOSK": "SK.750/Menhut-II/2011",
+          "TGLSK": "12/30/2011 12:00:00 AM",
+          "LSSK": "181090",
+          "ID_KPH": "0",
+          "NAMA_KPH": "TN Bukit Raya Bukit Baka",
+          "REMARK": "Sumber Data Kawasan Hutan per September 2023",
+          "LUAS": ""
+        }
+      ]
+    }
+  ],
+  "Code": 200,
+  "Succeeded": true,
+  "Message": "All OK",
+  "Description": ""
+}

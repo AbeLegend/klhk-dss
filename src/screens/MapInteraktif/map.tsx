@@ -4,21 +4,21 @@ import { FC, ReactNode, useEffect, useRef, useState } from "react";
 import MapView from "@arcgis/core/views/MapView";
 import WebMap from "@arcgis/core/WebMap";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
+import Search from "@arcgis/core/widgets/Search";
+
 import "@arcgis/core/assets/esri/themes/light/main.css";
 import { useAppSelector } from "@/redux/store";
+import { useDispatch } from "react-redux";
 
 // local
 import { cn, extractMapNumber, getPathFromUrl } from "@/lib";
-import { WebServiceModel } from "@/api/types";
-import { useDispatch } from "react-redux";
-import { updateLayer } from "@/redux/Map/MapInteraktif/slice";
+import {
+  setIsOpenModalMap,
+  setLocation,
+  updateLayer,
+} from "@/redux/Map/MapInteraktif/slice";
 
 // type
-interface LayerProps extends WebServiceModel {
-  isActive: boolean;
-  isUsed: boolean;
-}
-
 interface UsedLayerProps {
   url: string;
   id: number;
@@ -26,7 +26,10 @@ interface UsedLayerProps {
   isUsed: boolean;
 }
 
-const MapComponent: FC<{ children: ReactNode }> = ({ children }) => {
+const MapComponent: FC<{
+  children: ReactNode;
+  onSearchWidgetReady?: (search: Search) => void;
+}> = ({ children, onSearchWidgetReady }) => {
   // useRef
   const mapRef = useRef<HTMLDivElement>(null);
   // useState
@@ -35,38 +38,41 @@ const MapComponent: FC<{ children: ReactNode }> = ({ children }) => {
   const [layerMap, setLayerMap] = useState<Map<number, FeatureLayer>>(
     new Map()
   );
+  const [searchWidget, setSearchWidget] = useState<Search | null>(null);
   // useDispatch
   const dispatch = useDispatch();
   // useAppSelector
-  const { layer } = useAppSelector((state) => state.mapInteraktif);
+  const { layer, searchLocation } = useAppSelector(
+    (state) => state.mapInteraktif
+  );
 
   // function to add or remove layers
   const getUrlFromLayer = () => {
     if (layer.length > 0) {
       const activeLayers = layer.filter(
-        (item) => item.isActive && !item.isUsed
+        (item) => item.WebService.isActive && !item.WebService.isUsed
       );
       const inactiveLayers = layer.filter(
-        (item) => !item.isActive && !item.isUsed
+        (item) => !item.WebService.isActive && !item.WebService.isUsed
       );
 
       if (activeLayers.length > 0) {
         const filteredLayer: UsedLayerProps[] = activeLayers.map((item) => {
-          const path = item.Url;
+          const path = item.WebService.Url;
           const urlFixed = getPathFromUrl(path);
           const paramUrl = extractMapNumber(urlFixed);
           return {
-            id: item.Id,
+            id: item.WebService.Id,
             url: urlFixed,
             paramUrl: paramUrl,
-            isUsed: item.isUsed,
+            isUsed: item.WebService.isUsed,
           };
         });
         fetchLayerInfo(filteredLayer);
       }
 
       if (inactiveLayers.length > 0) {
-        removeLayers(inactiveLayers.map((item) => item.Id));
+        removeLayers(inactiveLayers.map((item) => item.WebService.Id));
       }
     }
   };
@@ -93,7 +99,6 @@ const MapComponent: FC<{ children: ReactNode }> = ({ children }) => {
                   });
                   view.map.add(featureLayer);
                   layerMap.set(id, featureLayer);
-                  console.log(`Layer added: ${url}/${layerInfo.id}`);
                 });
               }
             } else {
@@ -103,7 +108,6 @@ const MapComponent: FC<{ children: ReactNode }> = ({ children }) => {
               });
               view.map.add(featureLayer);
               layerMap.set(id, featureLayer);
-              console.log(`Single layer added: ${url}`);
             }
 
             // Mark the layer as used
@@ -123,7 +127,6 @@ const MapComponent: FC<{ children: ReactNode }> = ({ children }) => {
       console.error("Error fetching layer info:", error);
     }
   };
-
   const removeLayers = (layerIds: number[]) => {
     if (view && layerIds.length > 0) {
       layerIds.forEach((id) => {
@@ -131,7 +134,6 @@ const MapComponent: FC<{ children: ReactNode }> = ({ children }) => {
         if (layerToRemove) {
           view.map.remove(layerToRemove);
           layerMap.delete(id);
-          console.log(`Layer removed with ID: ${id}`);
 
           // Mark the layer as unused
           dispatch(
@@ -160,8 +162,21 @@ const MapComponent: FC<{ children: ReactNode }> = ({ children }) => {
         zoom: 5,
       });
 
+      const search = new Search({
+        view: mapView,
+        locationEnabled: true,
+      });
+      setSearchWidget(search);
+      onSearchWidgetReady?.(search);
+
       // Remove default zoom controls
       mapView.ui.remove("zoom");
+      mapView.on("click", (event) => {
+        const lat = event.mapPoint.latitude;
+        const long = event.mapPoint.longitude;
+        dispatch(setLocation({ latitude: lat, longitude: long }));
+        dispatch(setIsOpenModalMap(true));
+      });
 
       // Handle the event when the map is loaded
       mapView
@@ -182,7 +197,11 @@ const MapComponent: FC<{ children: ReactNode }> = ({ children }) => {
       };
     }
   }, []);
-
+  useEffect(() => {
+    if (searchWidget && searchLocation) {
+      searchWidget.search(searchLocation);
+    }
+  }, [searchLocation, searchWidget]);
   useEffect(() => {
     getUrlFromLayer();
   }, [layer]);

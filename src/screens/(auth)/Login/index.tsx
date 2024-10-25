@@ -73,7 +73,7 @@ export const LoginScreen: FC = () => {
             if (redirectTo) {
               router.push(redirectTo);
             } else {
-              router.push("/dashboard");
+              router.push("/map-interaktif");
             }
           }
         }

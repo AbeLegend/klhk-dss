@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server';
 
 const LOGIN_URL = '/login';
 const DASHBOARD_URL = '/dashboard';
+const MAP_INTERAKTIF_URL = '/map-interaktif';
 
 export async function middleware(request: NextRequest) {
   // Get Token
@@ -30,13 +31,13 @@ export async function middleware(request: NextRequest) {
     if (redirectToAfterLogin) {
       return redirect(decodeURIComponent(redirectToAfterLogin));
     } else {
-      return redirect(DASHBOARD_URL);
+      return redirect(MAP_INTERAKTIF_URL);
     }
   }
 
   // Token present and trying to access root URL "/", redirect to dashboard
   if (token && pathname === '/') {
-    return redirect(DASHBOARD_URL);
+    return redirect(MAP_INTERAKTIF_URL);
   }
 
   // Token present and accessing any other page, allow access

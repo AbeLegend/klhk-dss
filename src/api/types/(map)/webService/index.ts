@@ -6,9 +6,19 @@ Rules Create Type
 [ ] For Object = Model
 */
 
-import { BaseResponse } from "@/api/types";
+import { BaseResponse, DynamicStringModel } from "@/api/types";
 
 // BEGIN: WebService
+
+export interface WebServiceGroupModel {
+  Id: number,
+  CreateBy: string,
+  CreateDate: string,
+  Title: string,
+  UpdateBy: string | null,
+  UpdateDate: string | null
+}
+
 export interface WebServiceModel {
   Id: number,
   CoverImage: string | null,
@@ -22,21 +32,25 @@ export interface WebServiceModel {
   Url: string,
   Category: string,
   GroupCategory: string,
-  Group: {
-    Id: number,
-    CreateBy: string,
-    CreateDate: string,
-    Title: string,
-    UpdateBy: string | null,
-    UpdateDate: string | null
-  }
+  Group: WebServiceGroupModel
 }
 
 export interface WebServiceAllResponse extends BaseResponse {
   Data: WebServiceModel[]
 }
-
-// export interface WebServiceResponse extends BaseResponse {
-//   Data: WebServiceModel
-// }
 // END: WebService
+
+// BEGIN: WebServiceWithProperties
+
+export interface WebServiceGetPropertiesByGeomResponse extends BaseResponse {
+  Data: {
+    WebService: WebServiceModel
+    Properties: DynamicStringModel[]
+  }[]
+}
+// END: WebServiceWithProperties
+export interface WebServiceAllUriTitle extends BaseResponse {
+  Data: {
+    UriTitle: string
+  }[]
+}
