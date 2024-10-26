@@ -22,7 +22,7 @@ export const DashboardRoot2Screen: FC = () => {
     // <main className="bg-black w-screen h-screen">
     <main>
       <MapComponent>
-        <FloatNavbar />
+        <FloatNavbar searchWidget={null} />
         <Sidebar />
       </MapComponent>
     </main>
