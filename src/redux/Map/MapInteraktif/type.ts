@@ -1,14 +1,11 @@
 // local
-import { DynamicStringModel, WebServiceModel } from "@/api/types";
+import { WebServiceModel } from "@/api/types";
 
-export interface ReduxLayerWebService extends WebServiceModel {
+export interface UriTitleMapType {
   isActive: boolean;
   isUsed: boolean;
-}
-
-export interface ReduxLayerItem {
-  WebService: ReduxLayerWebService,
-  Properties: DynamicStringModel[]
+  UriTitle: string;
+  data?: WebServiceModel[]
 }
 
 export interface ReduxLocation {
@@ -17,7 +14,7 @@ export interface ReduxLocation {
 }
 
 export interface ReduxMapInteraktifModel {
-  layer: ReduxLayerItem[];
+  layer: UriTitleMapType[],
   location: ReduxLocation;
   isOpenModal: boolean;
   searchLocation: string;

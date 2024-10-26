@@ -14,10 +14,17 @@ import { Chip, DropdownLayer, SVGIcon } from "@/components/atoms";
 import LocationCrosshairsSVG from "@/icons/location-crosshairs.svg";
 import { ContainerData, ContainerInformation } from "@/components/molecules";
 import { FloatNavbar } from "@/components/templates";
-import { WebServiceModel } from "@/api/types";
-import { getAPIWebServiceAll, getAPIWebServiceByGeom } from "@/api/responses";
-import { setLayer, toggleLayer } from "@/redux/Map/MapInteraktif/slice";
-import { ReduxLayerItem } from "@/redux/Map/MapInteraktif";
+import {
+  getAPIWebServiceAllByUriTitle,
+  getAPIWebServiceAllUriTitle,
+  getAPIWebServiceByGeom,
+} from "@/api/responses";
+import {
+  setLayer,
+  toggleLayer,
+  updateLayer,
+} from "@/redux/Map/MapInteraktif/slice";
+import { UriTitleMapType } from "@/redux/Map/MapInteraktif";
 import { useAppSelector } from "@/redux/store";
 
 const MapComponent = dynamic(() => import("./map"), {
@@ -25,10 +32,9 @@ const MapComponent = dynamic(() => import("./map"), {
 });
 
 export const MapInteraktifScreen: FC = () => {
-    const [searchWidget, setSearchWidget] = useState<Search | null>(null);
+  const [searchWidget, setSearchWidget] = useState<Search | null>(null);
 
   return (
-    // <main className="bg-black w-screen h-screen">
     <main>
       <MapComponent onSearchWidgetReady={(search) => setSearchWidget(search)}>
         <FloatNavbar searchWidget={searchWidget} />
@@ -38,21 +44,26 @@ export const MapInteraktifScreen: FC = () => {
   );
 };
 
-interface WebServiceProps extends WebServiceModel {
-  isActive: boolean;
-  isUsed: boolean;
+interface IsLoadingType {
+  allUriTitle: boolean;
+  byAllUriTitle: boolean;
 }
+
+const initIsLoadingType: IsLoadingType = {
+  allUriTitle: false,
+  byAllUriTitle: false,
+};
 
 const Sidebar: FC = () => {
   // useState
-  const [text, setText] = useState<string>("Deteksi Perencanaan & Pengelolaan");
+  const [text, setText] = useState<string>("");
   const [isCopied, setIsCopied] = useState<boolean>(false);
   // useState - isLoading
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<IsLoadingType>(initIsLoadingType);
   // useDispatch
   const dispatch = useDispatch();
   // useAppSelector
-  const { layer, location, isOpenModal } = useAppSelector(
+  const { location, isOpenModal, layer } = useAppSelector(
     (state) => state.mapInteraktif
   );
   // useRef
@@ -61,70 +72,93 @@ const Sidebar: FC = () => {
   // className
   const activeClassName = "bg-primary shadow-xsmall cursor-default";
   const inActiveClassName = "bg-white shadow-xsmall cursor-pointer";
-  // function
-  const updateWebService = (updatedData: {
-    id: number;
-    data: WebServiceProps;
-  }) => {
-    const { data, id } = updatedData;
 
-    dispatch(
-      toggleLayer({
-        id: id,
-        layerData: data,
-      })
-    );
-  };
   // loadData - WebService
-  const loadWebService = async () => {
-    setIsLoading(true);
+  const loadWebServiceAllUriTitle = async () => {
+    setIsLoading((value) => ({ ...value, allUriTitle: true }));
     try {
-      const { data, status } = await getAPIWebServiceAll();
+      const { data, status } = await getAPIWebServiceAllUriTitle();
       if (status === 200) {
-        const newData: WebServiceProps[] = data.Data.map((item) => {
-          return { ...item, isActive: false, isUsed: false };
+        const newData: UriTitleMapType[] = data.Data.map((item) => {
+          return { ...item, isActive: false, isUsed: false, data: [] };
         });
-        const layerData: ReduxLayerItem[] = newData.map((item) => {
-          return {
-            WebService: item,
-            Properties: [],
-          };
-        });
-        dispatch(setLayer(layerData));
+        dispatch(setLayer(newData));
       }
     } catch (err) {
       console.log(err);
     } finally {
-      setIsLoading(false);
+      setIsLoading((value) => ({ ...value, allUriTitle: false }));
     }
   };
 
-  const loadWebServiceByGeom = async () => {
-    setIsLoading(true);
+  const loadWebServiceByAllUriTitle = async (uriData: {
+    UriTitle: string;
+    data: UriTitleMapType;
+  }) => {
+    setIsLoading((value) => ({ ...value, byAllUriTitle: true }));
+
     try {
-      const { data, status } = await getAPIWebServiceByGeom();
+      const existingLayer = layer.find(
+        (item) => item.UriTitle === uriData.UriTitle
+      );
+
+      if (
+        existingLayer &&
+        existingLayer.data &&
+        existingLayer.data.length > 0
+      ) {
+        dispatch(
+          toggleLayer({ title: uriData.UriTitle, layerData: uriData.data })
+        );
+        return;
+      }
+      dispatch(
+        toggleLayer({ title: uriData.UriTitle, layerData: uriData.data })
+      );
+      const { data, status } = await getAPIWebServiceAllByUriTitle(
+        uriData.UriTitle
+      );
+
       if (status === 200) {
-        const updatedData = data.Data.map((item) => ({
-          ...item,
-          WebService: {
-            ...item.WebService,
-            isUsed: false,
-            isActive: false,
-          },
-        }));
-        dispatch(setLayer(updatedData));
+        const updatedData = layer.map((item) => {
+          const matchedData = data.Data.filter(
+            (apiItem) => apiItem.UriTitle === item.UriTitle
+          );
+
+          if (matchedData.length > 0) {
+            const newData = matchedData.filter(
+              (apiItem) =>
+                !(item.data || []).some(
+                  (existingData) => existingData.Id === apiItem.Id
+                )
+            );
+            return {
+              ...item,
+              data: [...(item.data || []), ...newData],
+            };
+          }
+          return item;
+        });
+
+        const inputData = updatedData.find(
+          (item) => item.UriTitle === uriData.UriTitle
+        );
+        if (inputData) {
+          dispatch(
+            updateLayer({ title: uriData.UriTitle, updatedData: inputData })
+          );
+        }
       }
     } catch (err) {
       console.log(err);
     } finally {
-      setIsLoading(false);
+      setIsLoading((value) => ({ ...value, byAllUriTitle: false }));
     }
   };
 
   // useEffect
   useEffect(() => {
-    // loadWebService();
-    loadWebServiceByGeom();
+    loadWebServiceAllUriTitle();
   }, []);
 
   useEffect(() => {
@@ -183,28 +217,22 @@ const Sidebar: FC = () => {
               <p
                 className={cn([
                   "text-body-3 text-gray-800 underline text-right mb-4",
-                  layer.find((item) => item.WebService.isActive)
+                  layer.find((item) => item.isActive)
                     ? "cursor-pointer"
                     : "cursor-default",
                 ])}
                 onClick={() => {
-                  const data: WebServiceProps[] = layer.map((item) =>
-                    item.WebService.isActive === true
+                  const data: UriTitleMapType[] = layer.map((item) =>
+                    item.isActive === true
                       ? {
-                          ...item.WebService,
+                          ...item,
                           isActive: false,
                           isUsed: false,
                         }
-                      : item.WebService
+                      : item
                   );
 
-                  const layerData: ReduxLayerItem[] = data.map((item) => {
-                    return {
-                      WebService: item,
-                      Properties: [],
-                    };
-                  });
-                  dispatch(setLayer(layerData));
+                  dispatch(setLayer(data));
                 }}
               >
                 Matikan semua layer
@@ -214,16 +242,14 @@ const Sidebar: FC = () => {
                   layer.map((item, index) => {
                     return (
                       <Chip
-                        value={item.WebService.Title}
+                        value={item.UriTitle}
                         key={index}
-                        variant={
-                          item.WebService.isActive ? "primary" : "secondary"
-                        }
+                        variant={item.isActive ? "primary" : "secondary"}
                         className="cursor-pointer"
                         onClick={() => {
-                          updateWebService({
-                            id: item.WebService.Id,
-                            data: item.WebService,
+                          loadWebServiceByAllUriTitle({
+                            UriTitle: item.UriTitle,
+                            data: item,
                           });
                         }}
                       />
@@ -237,36 +263,40 @@ const Sidebar: FC = () => {
           {/* category */}
           <div className="flex flex-wrap gap-2">
             {Array.from(
-              new Map(
-                layer.map((item) => [
-                  item.WebService.Group.Id,
-                  item.WebService.Group,
-                ])
-              ).values()
-            ).map((group, index) => (
+              new Set(
+                layer
+                  .flatMap((layer) => layer.data)
+                  .map((item) => item && item.Group?.Title)
+                  .filter(
+                    (title) => typeof title === "string" && title.trim() !== ""
+                  )
+                  .sort((a, b) => (a ?? "").localeCompare(b ?? ""))
+              )
+            ).map((title, index) => (
               <div
+                key={index}
                 className={cn([
                   "px-4 py-2 rounded-lg",
-                  text === group.Title ? activeClassName : inActiveClassName,
+                  text === title ? activeClassName : inActiveClassName,
                   "border border-gray-300",
                 ])}
-                key={index}
                 onClick={() => {
-                  setText(group.Title);
+                  if (title) setText(title);
                 }}
               >
                 <p
                   className={cn([
                     "text-body-3",
-                    text === group.Title ? "text-white" : "text-gray-700",
+                    text === title ? "text-white" : "text-gray-700",
                     "font-medium",
                   ])}
                 >
-                  {group.Title}
+                  {title}
                 </p>
               </div>
             ))}
           </div>
+
           {/* line */}
           <div className="w-full h-[1px] bg-gray-50" />
           {/* perencanaan No. 1 */}

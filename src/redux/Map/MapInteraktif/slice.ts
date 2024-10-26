@@ -1,8 +1,7 @@
 // lib
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 // local
-import { WebServiceModel } from '@/api/types';
-import { ReduxLayerItem, ReduxLayerWebService, ReduxLocation, ReduxMapInteraktifModel } from './type';
+import { ReduxLocation, ReduxMapInteraktifModel, UriTitleMapType } from './type';
 
 const initialState: ReduxMapInteraktifModel = {
   layer: [],
@@ -11,7 +10,7 @@ const initialState: ReduxMapInteraktifModel = {
     longitude: 0,
   },
   isOpenModal: false,
-  searchLocation: ""
+  searchLocation: "",
 };
 
 
@@ -20,37 +19,37 @@ export const mapInteraktif = createSlice({
   initialState,
   reducers: {
     // layer[]
-    setLayer(state, action: PayloadAction<ReduxLayerItem[]>) {
+    setLayer(state, action: PayloadAction<UriTitleMapType[]>) {
       state.layer = action.payload;
     },
-    toggleLayer(state, action: PayloadAction<{ id: number; layerData: WebServiceModel }>) {
-      const { id, layerData } = action.payload;
-      const existingLayerIndex = state.layer.findIndex((item) => item.WebService.Id === id);
+    toggleLayer(state, action: PayloadAction<{ title: string; layerData: UriTitleMapType }>) {
+      const { title, layerData } = action.payload;
+      const existingLayerIndex = state.layer.findIndex((item) => item.UriTitle === title);
 
       if (existingLayerIndex !== -1) {
-        state.layer[existingLayerIndex].WebService.isActive = !state.layer[existingLayerIndex].WebService.isActive;
-        if (state.layer[existingLayerIndex].WebService.isUsed) {
-          state.layer[existingLayerIndex].WebService.isUsed = !state.layer[existingLayerIndex].WebService.isUsed;
+        state.layer[existingLayerIndex].isActive = !state.layer[existingLayerIndex].isActive;
+        if (state.layer[existingLayerIndex].isUsed) {
+          state.layer[existingLayerIndex].isUsed = !state.layer[existingLayerIndex].isUsed;
         }
       } else {
+
         state.layer.push({
-          WebService: {
-            ...layerData,
-            isActive: true,
-            isUsed: false,
-          },
-          Properties: [],
+          ...layerData,
+          isActive: true,
+          isUsed: false,
         });
       }
     },
-    updateLayer(state, action: PayloadAction<{ id: number; updatedData: Partial<ReduxLayerWebService> }>) {
-      const { id, updatedData } = action.payload;
-      const existingLayerIndex = state.layer.findIndex((item) => item.WebService.Id === id);
+    updateLayer(state, action: PayloadAction<{ title: string; updatedData: Partial<UriTitleMapType> }>) {
+      const { title, updatedData } = action.payload;
+      const existingLayerIndex = state.layer.findIndex((item) => item.UriTitle === title);
 
       if (existingLayerIndex !== -1) {
-        state.layer[existingLayerIndex].WebService = {
-          ...state.layer[existingLayerIndex].WebService,
-          ...updatedData,
+        const { isActive, isUsed, ...restData } = updatedData;
+
+        state.layer[existingLayerIndex] = {
+          ...state.layer[existingLayerIndex],
+          ...restData,
         };
       }
     },

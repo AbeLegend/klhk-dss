@@ -4,6 +4,7 @@ import { FC, ReactNode, useEffect, useRef, useState } from "react";
 import MapView from "@arcgis/core/views/MapView";
 import WebMap from "@arcgis/core/WebMap";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
+import MapImageLayer from "@arcgis/core/layers/MapImageLayer";
 import Search from "@arcgis/core/widgets/Search";
 
 import "@arcgis/core/assets/esri/themes/light/main.css";
@@ -11,20 +12,13 @@ import { useAppSelector } from "@/redux/store";
 import { useDispatch } from "react-redux";
 
 // local
-import { cn, extractMapNumber, getPathFromUrl } from "@/lib";
+import { cn, getPathFromUrl } from "@/lib";
 import {
   setIsOpenModalMap,
   setLocation,
-  updateLayer,
 } from "@/redux/Map/MapInteraktif/slice";
 
 // type
-interface UsedLayerProps {
-  url: string;
-  id: number;
-  paramUrl: string | null;
-  isUsed: boolean;
-}
 
 const MapComponent: FC<{
   children: ReactNode;
@@ -35,9 +29,10 @@ const MapComponent: FC<{
   // useState
   const [isMapLoaded, setIsMapLoaded] = useState<boolean>(false);
   const [view, setView] = useState<MapView | null>(null);
-  const [layerMap, setLayerMap] = useState<Map<number, FeatureLayer>>(
-    new Map()
-  );
+  const [layerMap, setLayerMap] = useState<
+    Map<number, FeatureLayer | MapImageLayer>
+  >(new Map());
+
   const [searchWidget, setSearchWidget] = useState<Search | null>(null);
   // useDispatch
   const dispatch = useDispatch();
@@ -46,106 +41,53 @@ const MapComponent: FC<{
     (state) => state.mapInteraktif
   );
 
-  // function to add or remove layers
+  const createLayer = (url: string) => {
+    const urlFixed = getPathFromUrl(url);
+    if (/\d+$/.test(urlFixed)) {
+      // const tes = "/server/rest/services/dgcfrhmh/KPH_AR_250K/MapServer/2";
+      // const tes2 = "/server/rest/services/jbcdsabhx/PPKH_AR_50K/MapServer/1";
+      return new FeatureLayer({ url: `/klhk-dss/${urlFixed}` });
+    } else {
+      return new MapImageLayer({ url: `/klhk-dss/${urlFixed}` });
+    }
+  };
+
+  // Function to add or remove layers
   const getUrlFromLayer = () => {
-    if (layer.length > 0) {
+    if (layer.length > 0 && view) {
+      // Separate active and inactive layers
       const activeLayers = layer.filter(
-        (item) => item.WebService.isActive && !item.WebService.isUsed
+        (item) => item.isActive && !item.isUsed
       );
       const inactiveLayers = layer.filter(
-        (item) => !item.WebService.isActive && !item.WebService.isUsed
+        (item) => !item.isActive && !item.isUsed
       );
 
-      if (activeLayers.length > 0) {
-        const filteredLayer: UsedLayerProps[] = activeLayers.map((item) => {
-          const path = item.WebService.Url;
-          const urlFixed = getPathFromUrl(path);
-          const paramUrl = extractMapNumber(urlFixed);
-          return {
-            id: item.WebService.Id,
-            url: urlFixed,
-            paramUrl: paramUrl,
-            isUsed: item.WebService.isUsed,
-          };
-        });
-        fetchLayerInfo(filteredLayer);
-      }
-
-      if (inactiveLayers.length > 0) {
-        removeLayers(inactiveLayers.map((item) => item.WebService.Id));
-      }
-    }
-  };
-
-  const fetchLayerInfo = async (data: UsedLayerProps[]) => {
-    try {
-      if (data.length > 0) {
-        for (const item of data) {
-          const { id, isUsed, paramUrl, url } = item;
-
-          if (!isUsed && view) {
-            let featureLayer: FeatureLayer;
-
-            if (paramUrl === null) {
-              // Fetching the details of all layers if no specific paramUrl is defined
-              const response = await fetch(`/klhk-dss${url}?f=json`);
-              const data = await response.json();
-
-              if (data.layers) {
-                // Iterate over the available layers and add them to the map
-                data.layers.forEach((layerInfo: any) => {
-                  featureLayer = new FeatureLayer({
-                    url: `/klhk-dss${url}/${layerInfo.id}`,
-                  });
-                  view.map.add(featureLayer);
-                  layerMap.set(id, featureLayer);
-                });
-              }
-            } else {
-              // Add a specific layer using the paramUrl
-              featureLayer = new FeatureLayer({
-                url: `/klhk-dss${url}`,
-              });
-              view.map.add(featureLayer);
-              layerMap.set(id, featureLayer);
-            }
-
-            // Mark the layer as used
-            dispatch(
-              updateLayer({
-                id: item.id,
-                updatedData: {
-                  isActive: true,
-                  isUsed: true,
-                },
-              })
-            );
+      // Add active layers to the map
+      activeLayers.forEach((item) => {
+        item.data?.forEach((childItem) => {
+          // Only add if the layer is not already in the map
+          if (!layerMap.has(childItem.Id)) {
+            const newLayer = createLayer(childItem.Url);
+            view.map.add(newLayer);
+            setLayerMap((prev) => new Map(prev).set(childItem.Id, newLayer));
           }
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching layer info:", error);
-    }
-  };
-  const removeLayers = (layerIds: number[]) => {
-    if (view && layerIds.length > 0) {
-      layerIds.forEach((id) => {
-        const layerToRemove = layerMap.get(id);
-        if (layerToRemove) {
-          view.map.remove(layerToRemove);
-          layerMap.delete(id);
+        });
+      });
 
-          // Mark the layer as unused
-          dispatch(
-            updateLayer({
-              id: id,
-              updatedData: {
-                isActive: false,
-                isUsed: false,
-              },
-            })
-          );
-        }
+      // Remove inactive layers from the map
+      inactiveLayers.forEach((item) => {
+        item.data?.forEach((childItem) => {
+          const existingLayer = layerMap.get(childItem.Id);
+          if (existingLayer) {
+            view.map.remove(existingLayer);
+            setLayerMap((prev) => {
+              const newLayerMap = new Map(prev);
+              newLayerMap.delete(childItem.Id);
+              return newLayerMap;
+            });
+          }
+        });
       });
     }
   };

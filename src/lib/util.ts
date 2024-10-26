@@ -69,3 +69,5 @@ export const extractMapNumber = (url: string): string | null => {
   const match = url.match(/MapServer\/(\d+)/);
   return match ? match[1] : null;
 }
+
+export const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
