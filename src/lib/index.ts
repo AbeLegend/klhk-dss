@@ -1,5 +1,7 @@
 export * from "./data"
 export * from "./font"
+export * from "./icon"
 export * from "./secure"
+export * from "./type"
 export * from "./util"
 export * from "./variable"

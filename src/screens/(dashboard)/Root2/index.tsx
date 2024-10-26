@@ -1,11 +1,7 @@
 "use client";
 // lib
-import { FC, ReactNode, useEffect, useRef, useState } from "react";
-// import MapView from "@arcgis/core/views/MapView";
-// import WebMap from "@arcgis/core/WebMap";
-// import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
+import { FC, useEffect, useState } from "react";
 import "@arcgis/core/assets/esri/themes/light/main.css";
-import Image from "next/image";
 import dynamic from "next/dynamic";
 
 // local
@@ -13,10 +9,9 @@ import { cn, copyToClipboard } from "@/lib";
 import { DropdownLayer, SVGIcon } from "@/components/atoms";
 
 // asset
-import LogoFullImage from "@/images/logo/logo-full-dark.png";
 import LocationCrosshairsSVG from "@/icons/location-crosshairs.svg";
-import SearchSVG from "@/icons/search.svg";
 import { ContainerData, ContainerInformation } from "@/components/molecules";
+import { FloatNavbar } from "@/components/templates";
 
 const MapComponent = dynamic(() => import("@/components/organisms/MapFix"), {
   ssr: false,
@@ -24,54 +19,13 @@ const MapComponent = dynamic(() => import("@/components/organisms/MapFix"), {
 
 export const DashboardRoot2Screen: FC = () => {
   return (
+    // <main className="bg-black w-screen h-screen">
     <main>
       <MapComponent>
-        <Navbar />
+        <FloatNavbar searchWidget={null} />
         <Sidebar />
       </MapComponent>
     </main>
-  );
-};
-
-// Component Navbar
-const Navbar: FC = () => {
-  return (
-    <nav className="absolute top-6 left-1/2 -translate-x-1/2 w-[97.5%] h-[14vh] bg-white rounded-2xl p-4">
-      <div className="flex gap-x-4 items-center self-center">
-        {/* Logo */}
-        <div className="relative h-[59px] w-[273px]">
-          <Image src={LogoFullImage} alt="logo" layout="fill" />
-        </div>
-        {/* line */}
-        <div className="h-[64px] w-[1px] bg-gray-200" />
-        {/* upload file */}
-        <div className="px-2 py-1 rounded-lg border border-dashed border-gray-200 bg-gray-50 flex gap-x-14 h-[64px] items-center">
-          <div>
-            <p className="text-body-3 text-gray-900 font-medium mb-1">
-              Upload SHP
-            </p>
-            <p className="text-xs text-gray-600">
-              Cari wilayah berdasarkan file SHP
-            </p>
-          </div>
-          <button className="px-[10px] py-[6px] rounded-lg bg-accent text-body-3 text-white h-fit">
-            Pilih File
-          </button>
-        </div>
-        {/* line */}
-        <div className="h-[64px] w-[1px] bg-gray-200" />
-        {/* search */}
-        <div>
-          <p className="text-body-3 text-gray-900 font-medium mb-1">Cari</p>
-          <div className="border  rounded-lg flex py-[10px] px-3 w-[376px] gap-x-3 items-center">
-            <SVGIcon Component={SearchSVG} />
-            <p className="text-body-3 text-gray-400">
-              Masukan Koordinat atau lokasi
-            </p>
-          </div>
-        </div>
-      </div>
-    </nav>
   );
 };
 

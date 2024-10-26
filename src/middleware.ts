@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 const LOGIN_URL = '/login';
+const DASHBOARD_URL = '/dashboard';
+const MAP_INTERAKTIF_URL = '/map-interaktif';
 
 export async function middleware(request: NextRequest) {
   // Get Token
@@ -12,19 +14,34 @@ export async function middleware(request: NextRequest) {
   const redirect = (url: string) =>
     NextResponse.redirect(new URL(url, request.url));
 
+  // No token and trying to access a protected route (except login)
   if (!token && pathname !== LOGIN_URL) {
     console.log("!TOKEN");
     return redirect(`${LOGIN_URL}?redirectTo=${redirectTo}`);
   }
+
+  // No token and accessing login page, allow access
   if (!token && pathname === LOGIN_URL) {
     return NextResponse.next();
   }
+
+  // Token present and trying to access login page, redirect to the stored redirectTo URL or dashboard
   if (token && pathname === LOGIN_URL) {
-    return redirect("/");
+    const redirectToAfterLogin = request.nextUrl.searchParams.get('redirectTo');
+    if (redirectToAfterLogin) {
+      return redirect(decodeURIComponent(redirectToAfterLogin));
+    } else {
+      return redirect(MAP_INTERAKTIF_URL);
+    }
   }
 
+  // Token present and trying to access root URL "/", redirect to dashboard
+  if (token && pathname === '/') {
+    return redirect(MAP_INTERAKTIF_URL);
+  }
+
+  // Token present and accessing any other page, allow access
   if (token) {
-    // TODO: Validation if token expired, redirect to login page and remove token cookies
     return NextResponse.next();
   }
 
