@@ -14,8 +14,8 @@ export interface UriTitleMapType {
 }
 
 export interface ReduxLocation {
-  latitude: number;
-  longitude: number;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 export interface ReduxMapInteraktifModel {

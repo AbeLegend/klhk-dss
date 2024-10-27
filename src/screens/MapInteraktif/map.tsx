@@ -126,7 +126,7 @@ const MapComponent: FC<{
       // Handle the event when the map is loaded
       mapView
         .when(() => {
-          console.log("Map loaded successfully!");
+          // console.log("Map loaded successfully!");
           setIsMapLoaded(true);
           setView(mapView);
         })
@@ -147,8 +147,10 @@ const MapComponent: FC<{
       searchWidget.search(searchLocation);
     }
   }, [searchLocation, searchWidget]);
+
   useEffect(() => {
     getUrlFromLayer();
+    console.log({ layer });
   }, [layer]);
 
   return (

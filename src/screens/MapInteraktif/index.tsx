@@ -19,10 +19,12 @@ import {
   getAPIWebServiceAllByUriTitle,
   getAPIWebServiceAllUriTitle,
   getAPIWebServiceByGeom,
+  getAPIWebServiceGetPropertiesByGeom,
 } from "@/api/responses";
 import {
   setIsOpenModalMap,
   setLayer,
+  setLocation,
   toggleLayer,
   updateLayer,
 } from "@/redux/Map/MapInteraktif/slice";
@@ -49,11 +51,13 @@ export const MapInteraktifScreen: FC = () => {
 interface IsLoadingType {
   allUriTitle: boolean;
   byAllUriTitle: boolean;
+  getPropertiesByGeom: boolean;
 }
 
 const initIsLoadingType: IsLoadingType = {
   allUriTitle: false,
   byAllUriTitle: false,
+  getPropertiesByGeom: false,
 };
 
 const Sidebar: FC = () => {
@@ -100,11 +104,12 @@ const Sidebar: FC = () => {
     setIsLoading((value) => ({ ...value, byAllUriTitle: true }));
 
     try {
+      // Cek apakah layer dengan UriTitle yang sama sudah ada
       const existingLayer = layer.find(
         (item) => item.UriTitle === uriData.UriTitle
       );
 
-      // Jika data sudah ada, langsung toggle layer dan hentikan proses.
+      // Jika data sudah ada, langsung toggle layer dan hentikan proses
       if (
         existingLayer &&
         existingLayer.data &&
@@ -116,7 +121,7 @@ const Sidebar: FC = () => {
         return;
       }
 
-      // Toggle layer sebelum memuat data baru.
+      // Toggle layer sebelum memuat data baru
       dispatch(
         toggleLayer({ title: uriData.UriTitle, layerData: uriData.data })
       );
@@ -127,28 +132,20 @@ const Sidebar: FC = () => {
       );
 
       if (status === 200) {
+        // Persiapkan data untuk update layer
         const updatedData = layer.map((item) => {
-          const matchedData = data.Data.filter(
-            (apiItem) => apiItem.UriTitle === item.UriTitle
-          );
-
-          if (matchedData.length > 0) {
-            const newData = matchedData
-              .filter(
-                (apiItem) =>
-                  !(item.data || []).some(
-                    (existingData) => existingData.WebService.Id === apiItem.Id
-                  )
-              )
-              .map((apiItem) => ({
-                WebService: apiItem, // Mengasumsikan `apiItem` adalah tipe `WebServiceModel`
-                Properties: [], // Isi dengan `Properties` jika ada
-              }));
-
-            return {
-              ...item,
-              data: [...(item.data || []), ...newData],
-            };
+          if (item.UriTitle === uriData.UriTitle) {
+            // Cocokkan data dari API berdasarkan `UriTitle`
+            const newData = data.Data.filter(
+              (apiItem) =>
+                !(item.data || []).some(
+                  (existingData) => existingData.WebService.Id === apiItem.Id
+                )
+            ).map((apiItem) => ({
+              WebService: apiItem, // Mengasumsikan `apiItem` adalah tipe `WebServiceModel`
+              Properties: [], // Isi dengan `Properties` jika ada
+            }));
+            return { ...item, data: [...(item.data || []), ...newData] };
           }
           return item;
         });
@@ -161,7 +158,10 @@ const Sidebar: FC = () => {
         // Jika data ditemukan, update layer menggunakan `updateLayer`
         if (inputData) {
           dispatch(
-            updateLayer({ title: uriData.UriTitle, updatedData: inputData })
+            updateLayer({
+              title: uriData.UriTitle,
+              updatedData: { data: inputData.data },
+            })
           );
         }
       }
@@ -169,6 +169,84 @@ const Sidebar: FC = () => {
       console.log(err);
     } finally {
       setIsLoading((value) => ({ ...value, byAllUriTitle: false }));
+    }
+  };
+
+  const loadWebServiceGetPropertiesByGeom = async (uriData: {
+    UriTitle: string;
+    data: UriTitleMapType;
+  }) => {
+    setIsLoading((value) => ({ ...value, getPropertiesByGeom: true }));
+
+    try {
+      const existingLayer = layer.find(
+        (item) => item.UriTitle === uriData.UriTitle
+      );
+
+      // Jika data sudah ada, toggle layer dan hentikan proses
+      if (
+        existingLayer &&
+        existingLayer.data &&
+        existingLayer.data.length > 0
+      ) {
+        dispatch(
+          toggleLayer({ title: uriData.UriTitle, layerData: uriData.data })
+        );
+        return;
+      }
+
+      // Toggle layer sebelum memuat data baru
+      dispatch(
+        toggleLayer({ title: uriData.UriTitle, layerData: uriData.data })
+      );
+
+      // Ambil data dari API
+      if (location.latitude && location.longitude) {
+        const { data, status } = await getAPIWebServiceGetPropertiesByGeom({
+          latitude: location.latitude,
+          longitude: location.longitude,
+        });
+
+        if (status === 200) {
+          // Filter data API yang sesuai dengan `UriTitle` tertentu
+          const matchedData = data.Data.filter(
+            (apiItem) => apiItem.WebService.UriTitle === uriData.UriTitle
+          );
+
+          // Persiapkan data untuk update layer
+          const newData = matchedData
+            .filter(
+              (apiItem) =>
+                !(existingLayer?.data || []).some(
+                  (existingData) =>
+                    existingData.WebService.Id === apiItem.WebService.Id
+                )
+            )
+            .map((apiItem) => ({
+              WebService: apiItem.WebService,
+              Properties: apiItem.Properties,
+            }));
+
+          if (newData.length > 0) {
+            // Update data layer jika ada data baru
+            const updatedData = {
+              ...existingLayer,
+              data: [...(existingLayer?.data || []), ...newData],
+            };
+
+            dispatch(
+              updateLayer({
+                title: uriData.UriTitle,
+                updatedData: { data: updatedData.data },
+              })
+            );
+          }
+        }
+      }
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setIsLoading((value) => ({ ...value, getPropertiesByGeom: false }));
     }
   };
 
@@ -213,6 +291,7 @@ const Sidebar: FC = () => {
           className="absolute -top-3 -right-3 cursor-pointer bg-white p-1 rounded-lg shadow"
           onClick={() => {
             dispatch(setIsOpenModalMap(false));
+            dispatch(setLocation({ latitude: null, longitude: null }));
           }}
         >
           <HiOutlineX className="w-5 h-5 text-gray-700" />
@@ -288,10 +367,17 @@ const Sidebar: FC = () => {
                           variant={item.isActive ? "primary" : "secondary"}
                           className="cursor-pointer"
                           onClick={() => {
-                            loadWebServiceByAllUriTitle({
-                              UriTitle: item.UriTitle,
-                              data: item,
-                            });
+                            if (location.latitude && location.longitude) {
+                              loadWebServiceGetPropertiesByGeom({
+                                UriTitle: item.UriTitle,
+                                data: item,
+                              });
+                            } else {
+                              loadWebServiceByAllUriTitle({
+                                UriTitle: item.UriTitle,
+                                data: item,
+                              });
+                            }
                           }}
                         />
                       );
