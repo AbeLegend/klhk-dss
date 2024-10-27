@@ -13,7 +13,6 @@ const initialState: ReduxMapInteraktifModel = {
   searchLocation: "",
 };
 
-
 export const mapInteraktif = createSlice({
   name: 'mapInteraktif',
   initialState,
@@ -32,7 +31,6 @@ export const mapInteraktif = createSlice({
           state.layer[existingLayerIndex].isUsed = !state.layer[existingLayerIndex].isUsed;
         }
       } else {
-
         state.layer.push({
           ...layerData,
           isActive: true,

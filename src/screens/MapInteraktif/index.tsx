@@ -5,6 +5,7 @@ import "@arcgis/core/assets/esri/themes/light/main.css";
 import dynamic from "next/dynamic";
 import { useDispatch } from "react-redux";
 import Search from "@arcgis/core/widgets/Search";
+import { HiOutlineX } from "react-icons/hi";
 
 // local
 import { cn, copyToClipboard } from "@/lib";
@@ -20,6 +21,7 @@ import {
   getAPIWebServiceByGeom,
 } from "@/api/responses";
 import {
+  setIsOpenModalMap,
   setLayer,
   toggleLayer,
   updateLayer,
@@ -102,6 +104,7 @@ const Sidebar: FC = () => {
         (item) => item.UriTitle === uriData.UriTitle
       );
 
+      // Jika data sudah ada, langsung toggle layer dan hentikan proses.
       if (
         existingLayer &&
         existingLayer.data &&
@@ -112,9 +115,13 @@ const Sidebar: FC = () => {
         );
         return;
       }
+
+      // Toggle layer sebelum memuat data baru.
       dispatch(
         toggleLayer({ title: uriData.UriTitle, layerData: uriData.data })
       );
+
+      // Ambil data dari API
       const { data, status } = await getAPIWebServiceAllByUriTitle(
         uriData.UriTitle
       );
@@ -126,12 +133,18 @@ const Sidebar: FC = () => {
           );
 
           if (matchedData.length > 0) {
-            const newData = matchedData.filter(
-              (apiItem) =>
-                !(item.data || []).some(
-                  (existingData) => existingData.Id === apiItem.Id
-                )
-            );
+            const newData = matchedData
+              .filter(
+                (apiItem) =>
+                  !(item.data || []).some(
+                    (existingData) => existingData.WebService.Id === apiItem.Id
+                  )
+              )
+              .map((apiItem) => ({
+                WebService: apiItem, // Mengasumsikan `apiItem` adalah tipe `WebServiceModel`
+                Properties: [], // Isi dengan `Properties` jika ada
+              }));
+
             return {
               ...item,
               data: [...(item.data || []), ...newData],
@@ -140,9 +153,12 @@ const Sidebar: FC = () => {
           return item;
         });
 
+        // Temukan data yang telah di-update untuk `UriTitle` tertentu
         const inputData = updatedData.find(
           (item) => item.UriTitle === uriData.UriTitle
         );
+
+        // Jika data ditemukan, update layer menggunakan `updateLayer`
         if (inputData) {
           dispatch(
             updateLayer({ title: uriData.UriTitle, updatedData: inputData })
@@ -169,182 +185,202 @@ const Sidebar: FC = () => {
     }
   }, [isCopied]);
 
+  const groupTitles = Array.from(
+    new Set(
+      layer
+        .filter((item) => item.isActive)
+        .flatMap((item) => item.data || [])
+        // .map((item) => item.Group?.Title)
+        .map((item) => item.WebService.Group.Title)
+        .filter(
+          (title): title is string =>
+            typeof title === "string" && title.trim() !== ""
+        )
+        .sort((a, b) => a.localeCompare(b))
+    )
+  );
+
   return (
     isOpenModal && (
       <div
         className={cn([
-          "absolute right-[1.5%] top-[20%] w-[40%] h-[75vh] bg-gray-gradient shadow-medium p-4 rounded-2xl overflow-y-scroll",
+          "relative",
+          "absolute right-[1.5%] top-[20%] w-[40%] max-h-[75vh] bg-gray-gradient shadow-medium p-4 rounded-2xl",
         ])}
         ref={divRef}
       >
-        <div className="grid gap-y-6">
-          {/* location */}
-          <div
-            className={cn([
-              "bg-white shadow-xsmall rounded-2xl py-2 px-4 flex justify-between items-center",
-            ])}
-          >
-            {/* left */}
-            <div className="flex gap-x-[14px] items-center">
-              <SVGIcon
-                Component={LocationCrosshairsSVG}
-                width={24}
-                height={24}
-              />
-              <p className="text-body-3 text-black font-semibold">{`${location.latitude}, ${location.longitude}`}</p>
-            </div>
-            {/* right */}
-            <p
+        <div
+          className="absolute -top-3 -right-3 cursor-pointer bg-white p-1 rounded-lg shadow"
+          onClick={() => {
+            dispatch(setIsOpenModalMap(false));
+          }}
+        >
+          <HiOutlineX className="w-5 h-5 text-gray-700" />
+        </div>
+        <div className="h-fit max-h-[75vh] overflow-y-scroll">
+          <div className="grid gap-y-6">
+            {/* location */}
+            <div
               className={cn([
-                "text-body-3 text-gray-800",
-                !isCopied ? "cursor-pointer" : "cursor-default",
+                "bg-white shadow-xsmall rounded-2xl py-2 px-4 flex justify-between items-center",
               ])}
-              onClick={() => {
-                if (!isCopied) {
-                  copyToClipboard(
-                    `${location.latitude}, ${location.longitude}`
-                  );
-                  setIsCopied(true);
-                }
-              }}
             >
-              {isCopied ? "Copied" : "Copy"}
-            </p>
-          </div>
-          {/* layer */}
-          <div className={cn([])}>
-            <DropdownLayer>
+              {/* left */}
+              <div className="flex gap-x-[14px] items-center">
+                <SVGIcon
+                  Component={LocationCrosshairsSVG}
+                  width={24}
+                  height={24}
+                />
+                <p className="text-body-3 text-black font-semibold">{`${location.latitude}, ${location.longitude}`}</p>
+              </div>
+              {/* right */}
               <p
                 className={cn([
-                  "text-body-3 text-gray-800 underline text-right mb-4",
-                  layer.find((item) => item.isActive)
-                    ? "cursor-pointer"
-                    : "cursor-default",
+                  "text-body-3 text-gray-800",
+                  !isCopied ? "cursor-pointer" : "cursor-default",
                 ])}
                 onClick={() => {
-                  const data: UriTitleMapType[] = layer.map((item) =>
-                    item.isActive === true
-                      ? {
-                          ...item,
-                          isActive: false,
-                          isUsed: false,
-                        }
-                      : item
-                  );
-
-                  dispatch(setLayer(data));
-                }}
-              >
-                Matikan semua layer
-              </p>
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 flex gap-2 flex-wrap">
-                {layer.length > 0 &&
-                  layer.map((item, index) => {
-                    return (
-                      <Chip
-                        value={item.UriTitle}
-                        key={index}
-                        variant={item.isActive ? "primary" : "secondary"}
-                        className="cursor-pointer"
-                        onClick={() => {
-                          loadWebServiceByAllUriTitle({
-                            UriTitle: item.UriTitle,
-                            data: item,
-                          });
-                        }}
-                      />
+                  if (!isCopied) {
+                    copyToClipboard(
+                      `${location.latitude}, ${location.longitude}`
                     );
-                  })}
-              </div>
-            </DropdownLayer>
-          </div>
-          {/* line */}
-          <div className="w-full h-[1px] bg-gray-50" />
-          {/* category */}
-          <div className="flex flex-wrap gap-2">
-            {Array.from(
-              new Set(
-                layer
-                  .flatMap((layer) => layer.data)
-                  .map((item) => item && item.Group?.Title)
-                  .filter(
-                    (title) => typeof title === "string" && title.trim() !== ""
-                  )
-                  .sort((a, b) => (a ?? "").localeCompare(b ?? ""))
-              )
-            ).map((title, index) => (
-              <div
-                key={index}
-                className={cn([
-                  "px-4 py-2 rounded-lg",
-                  text === title ? activeClassName : inActiveClassName,
-                  "border border-gray-300",
-                ])}
-                onClick={() => {
-                  if (title) setText(title);
+                    setIsCopied(true);
+                  }
                 }}
               >
+                {isCopied ? "Copied" : "Copy"}
+              </p>
+            </div>
+            {/* layer */}
+            <div className={cn([])}>
+              <DropdownLayer>
                 <p
                   className={cn([
-                    "text-body-3",
-                    text === title ? "text-white" : "text-gray-700",
-                    "font-medium",
+                    "text-body-3 text-gray-800 underline text-right mb-4",
+                    layer.find((item) => item.isActive)
+                      ? "cursor-pointer"
+                      : "cursor-default",
+                  ])}
+                  onClick={() => {
+                    const data: UriTitleMapType[] = layer.map((item) =>
+                      item.isActive === true
+                        ? {
+                            ...item,
+                            isActive: false,
+                            isUsed: false,
+                          }
+                        : item
+                    );
+
+                    dispatch(setLayer(data));
+                  }}
+                >
+                  Matikan semua layer
+                </p>
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 flex gap-2 flex-wrap">
+                  {layer.length > 0 &&
+                    layer.map((item, index) => {
+                      return (
+                        <Chip
+                          value={item.UriTitle}
+                          key={index}
+                          variant={item.isActive ? "primary" : "secondary"}
+                          className="cursor-pointer"
+                          onClick={() => {
+                            loadWebServiceByAllUriTitle({
+                              UriTitle: item.UriTitle,
+                              data: item,
+                            });
+                          }}
+                        />
+                      );
+                    })}
+                </div>
+              </DropdownLayer>
+            </div>
+            {/* line */}
+            {groupTitles.length > 0 && (
+              <div className="w-full h-[1px] bg-gray-50" />
+            )}
+            {/* category */}
+            <div className="flex flex-wrap gap-2">
+              {groupTitles.map((title, index) => (
+                <div
+                  key={index}
+                  className={cn([
+                    "px-4 py-2 rounded-lg",
+                    text === title ? activeClassName : inActiveClassName,
+                    "border border-gray-300",
+                  ])}
+                  onClick={() => {
+                    if (title) setText(title);
+                  }}
+                >
+                  <p
+                    className={cn([
+                      "text-body-3",
+                      text === title ? "text-white" : "text-gray-700",
+                      "font-medium",
+                    ])}
+                  >
+                    {title}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            {/* line */}
+            {groupTitles.length > 0 && (
+              <div className="w-full h-[1px] bg-gray-50" />
+            )}
+            {/* perencanaan No. 1 */}
+            {/* <ContainerInformation title="Perencanaan">
+              <ContainerData
+                containerClassName="grid-cols-2"
+                data={[
+                  {
+                    title: "Fungsi",
+                    description: "Cagar Alam",
+                  },
+                  {
+                    title: "Luas",
+                    description: "500 Ha",
+                    dataClassName: "justify-self-end",
+                  },
+                ]}
+              />
+            </ContainerInformation> */}
+            {/* pengelolaan No. 1 */}
+            {/* <ContainerInformation title="Pengelolaan">
+              <div className="flex">
+                <div
+                  className={cn([
+                    "py-[10px] px-4 bg-primary rounded-l-lg",
+                    activeClassName,
+                    "border border-gray-300",
+                    "w-1/2",
                   ])}
                 >
-                  {title}
-                </p>
+                  <p className="text-body-3 text-white font-medium text-center">
+                    Informasi
+                  </p>
+                </div>
+                <div
+                  className={cn([
+                    "py-[10px] px-4 bg-primary rounded-r-lg",
+                    inActiveClassName,
+                    "border border-gray-300",
+                    "w-1/2",
+                  ])}
+                >
+                  <p className="text-body-3 text-gray-700 font-medium text-center">
+                    History dan Perubahan
+                  </p>
+                </div>
               </div>
-            ))}
+            </ContainerInformation> */}
           </div>
-
-          {/* line */}
-          <div className="w-full h-[1px] bg-gray-50" />
-          {/* perencanaan No. 1 */}
-          <ContainerInformation title="Perencanaan">
-            <ContainerData
-              containerClassName="grid-cols-2"
-              data={[
-                {
-                  title: "Fungsi",
-                  description: "Cagar Alam",
-                },
-                {
-                  title: "Luas",
-                  description: "500 Ha",
-                  dataClassName: "justify-self-end",
-                },
-              ]}
-            />
-          </ContainerInformation>
-          {/* pengelolaan No. 1 */}
-          <ContainerInformation title="Pengelolaan">
-            <div className="flex">
-              <div
-                className={cn([
-                  "py-[10px] px-4 bg-primary rounded-l-lg",
-                  activeClassName,
-                  "border border-gray-300",
-                  "w-1/2",
-                ])}
-              >
-                <p className="text-body-3 text-white font-medium text-center">
-                  Informasi
-                </p>
-              </div>
-              <div
-                className={cn([
-                  "py-[10px] px-4 bg-primary rounded-r-lg",
-                  inActiveClassName,
-                  "border border-gray-300",
-                  "w-1/2",
-                ])}
-              >
-                <p className="text-body-3 text-gray-700 font-medium text-center">
-                  History dan Perubahan
-                </p>
-              </div>
-            </div>
-          </ContainerInformation>
         </div>
       </div>
     )
