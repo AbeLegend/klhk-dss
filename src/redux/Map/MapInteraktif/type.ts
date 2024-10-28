@@ -1,10 +1,15 @@
 // local
-import { DynamicStringModel, WebServiceModel } from "@/api/types";
+import { WebServiceModel } from "@/api/types";
 
+export interface PropertiesModel {
+  Key: string,
+  Value: string,
+  Index: number
+}
 
 export interface DataWebserviceByGeom {
   WebService: WebServiceModel
-  Properties: DynamicStringModel[]
+  Properties: PropertiesModel[]
 }
 export interface UriTitleMapType {
   isActive: boolean;
@@ -14,8 +19,8 @@ export interface UriTitleMapType {
 }
 
 export interface ReduxLocation {
-  latitude: number | null;
-  longitude: number | null;
+  latitude: number;
+  longitude: number;
 }
 
 export interface ReduxMapInteraktifModel {

@@ -1,0 +1,42 @@
+{
+  "Data": [
+    {
+      "WebService": {
+        "Id": 14,
+        "CoverImage": null,
+        "CreateBy": "491874ce-92c0-4cfd-83b7-f916df7c219b|Admin",
+        "CreateDate": "2024-09-18T18:07:17.739198",
+        "IdReferenceSimontana": "",
+        "Title": "Informasi Wilayah",
+        "UpdateBy": null,
+        "UpdateDate": null,
+        "UriTitle": "informasi-wilayah",
+        "Url": "https://geoportal.menlhk.go.id/server/rest/services/SIGAP_Interaktif/Adm_KabKot_Sept2023/MapServer",
+        "Category": "Informasi Wilayah",
+        "GroupCategory": "Informasi",
+        "Group": {
+          "Id": 2,
+          "CreateBy": "491874ce-92c0-4cfd-83b7-f916df7c219b|Admin",
+          "CreateDate": "2024-10-08T07:49:53.457072",
+          "Title": "Laju Perubahan",
+          "UpdateBy": null,
+          "UpdateDate": null
+        }
+      },
+      "Properties": [
+        {
+          "Title": "Provinsi",
+          "Value": "Kalimantan Selatan"
+        },
+        {
+          "Title": "Status",
+          "Value": "Aktif"
+        }
+      ]
+    }
+  ],
+  "Code": 200,
+  "Succeeded": true,
+  "Message": "All OK",
+  "Description": ""
+}

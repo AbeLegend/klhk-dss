@@ -18,12 +18,11 @@ import {
   setLocation,
 } from "@/redux/Map/MapInteraktif/slice";
 
-// type
-
 const MapComponent: FC<{
   children: ReactNode;
   onSearchWidgetReady?: (search: Search) => void;
-}> = ({ children, onSearchWidgetReady }) => {
+  onTriggerSidebar: () => void;
+}> = ({ children, onSearchWidgetReady, onTriggerSidebar }) => {
   // useRef
   const mapRef = useRef<HTMLDivElement>(null);
   // useState
@@ -37,7 +36,7 @@ const MapComponent: FC<{
   // useDispatch
   const dispatch = useDispatch();
   // useAppSelector
-  const { layer, searchLocation } = useAppSelector(
+  const { layer, searchLocation, isOpenModal, location } = useAppSelector(
     (state) => state.mapInteraktif
   );
 
@@ -121,6 +120,7 @@ const MapComponent: FC<{
         const long = event.mapPoint.longitude;
         dispatch(setLocation({ latitude: lat, longitude: long }));
         dispatch(setIsOpenModalMap(true));
+        onTriggerSidebar();
       });
 
       // Handle the event when the map is loaded
@@ -154,7 +154,7 @@ const MapComponent: FC<{
   }, [layer]);
 
   return (
-    <div ref={mapRef} className={cn(["h-screen w-full"])}>
+    <div ref={mapRef} className={cn(["h-screen w-full relative"])}>
       {isMapLoaded && children}
     </div>
   );

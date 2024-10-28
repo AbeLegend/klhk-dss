@@ -38,17 +38,44 @@ export const mapInteraktif = createSlice({
         });
       }
     },
-    updateLayer(state, action: PayloadAction<{ title: string; updatedData: Partial<UriTitleMapType> }>) {
+    updateLayer(
+      state,
+      action: PayloadAction<{ title: string; updatedData: Partial<UriTitleMapType> }>
+    ) {
       const { title, updatedData } = action.payload;
       const existingLayerIndex = state.layer.findIndex((item) => item.UriTitle === title);
 
       if (existingLayerIndex !== -1) {
-        const { isActive, isUsed, ...restData } = updatedData;
+        const existingLayer = state.layer[existingLayerIndex];
 
-        state.layer[existingLayerIndex] = {
-          ...state.layer[existingLayerIndex],
-          ...restData,
-        };
+        if (updatedData.data && updatedData.data.length > 0) {
+          const updatedDataItems = updatedData.data.map((newItem) => {
+            // Temukan item data yang ada berdasarkan WebService.Id
+            const existingDataItem = existingLayer.data?.find(
+              (item) => item.WebService.Id === newItem.WebService.Id
+            );
+
+            // Jika item data sudah ada, perbarui hanya Properties-nya
+            if (existingDataItem) {
+              return {
+                ...existingDataItem,
+                Properties: newItem.Properties || existingDataItem.Properties,
+              };
+            }
+
+            // Jika tidak ada item data yang cocok, tambahkan item baru
+            return newItem;
+          });
+
+          // Perbarui data yang ada dengan item yang diperbarui
+          state.layer[existingLayerIndex].data = updatedDataItems;
+        } else {
+          // Jika tidak ada data khusus yang dikirim, perbarui seluruh layer
+          state.layer[existingLayerIndex] = {
+            ...existingLayer,
+            ...updatedData,
+          };
+        }
       }
     },
     clearLayer(state) {
@@ -75,6 +102,6 @@ export const {
   // modal
   setIsOpenModalMap,
   // search
-  setSearchLocation
+  setSearchLocation,
 } = mapInteraktif.actions;
 export default mapInteraktif.reducer;
