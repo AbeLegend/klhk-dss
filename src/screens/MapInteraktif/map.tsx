@@ -18,12 +18,11 @@ import {
   setLocation,
 } from "@/redux/Map/MapInteraktif/slice";
 
-// type
-
 const MapComponent: FC<{
   children: ReactNode;
   onSearchWidgetReady?: (search: Search) => void;
-}> = ({ children, onSearchWidgetReady }) => {
+  onTriggerSidebar: () => void;
+}> = ({ children, onSearchWidgetReady, onTriggerSidebar }) => {
   // useRef
   const mapRef = useRef<HTMLDivElement>(null);
   // useState
@@ -37,15 +36,13 @@ const MapComponent: FC<{
   // useDispatch
   const dispatch = useDispatch();
   // useAppSelector
-  const { layer, searchLocation } = useAppSelector(
+  const { layer, searchLocation, isOpenModal, location } = useAppSelector(
     (state) => state.mapInteraktif
   );
 
   const createLayer = (url: string) => {
     const urlFixed = getPathFromUrl(url);
     if (/\d+$/.test(urlFixed)) {
-      // const tes = "/server/rest/services/dgcfrhmh/KPH_AR_250K/MapServer/2";
-      // const tes2 = "/server/rest/services/jbcdsabhx/PPKH_AR_50K/MapServer/1";
       return new FeatureLayer({ url: `/klhk-dss/${urlFixed}` });
     } else {
       return new MapImageLayer({ url: `/klhk-dss/${urlFixed}` });
@@ -66,11 +63,14 @@ const MapComponent: FC<{
       // Add active layers to the map
       activeLayers.forEach((item) => {
         item.data?.forEach((childItem) => {
+          const childId = childItem.WebService.Id; // Akses Id melalui WebService
+          const childUrl = childItem.WebService.Url; // Akses Url melalui WebService
+
           // Only add if the layer is not already in the map
-          if (!layerMap.has(childItem.Id)) {
-            const newLayer = createLayer(childItem.Url);
+          if (!layerMap.has(childId)) {
+            const newLayer = createLayer(childUrl);
             view.map.add(newLayer);
-            setLayerMap((prev) => new Map(prev).set(childItem.Id, newLayer));
+            setLayerMap((prev) => new Map(prev).set(childId, newLayer));
           }
         });
       });
@@ -78,12 +78,14 @@ const MapComponent: FC<{
       // Remove inactive layers from the map
       inactiveLayers.forEach((item) => {
         item.data?.forEach((childItem) => {
-          const existingLayer = layerMap.get(childItem.Id);
+          const childId = childItem.WebService.Id; // Akses Id melalui WebService
+          const existingLayer = layerMap.get(childId);
+
           if (existingLayer) {
             view.map.remove(existingLayer);
             setLayerMap((prev) => {
               const newLayerMap = new Map(prev);
-              newLayerMap.delete(childItem.Id);
+              newLayerMap.delete(childId);
               return newLayerMap;
             });
           }
@@ -118,12 +120,13 @@ const MapComponent: FC<{
         const long = event.mapPoint.longitude;
         dispatch(setLocation({ latitude: lat, longitude: long }));
         dispatch(setIsOpenModalMap(true));
+        onTriggerSidebar();
       });
 
       // Handle the event when the map is loaded
       mapView
         .when(() => {
-          console.log("Map loaded successfully!");
+          // console.log("Map loaded successfully!");
           setIsMapLoaded(true);
           setView(mapView);
         })
@@ -144,12 +147,14 @@ const MapComponent: FC<{
       searchWidget.search(searchLocation);
     }
   }, [searchLocation, searchWidget]);
+
   useEffect(() => {
     getUrlFromLayer();
+    console.log({ layer });
   }, [layer]);
 
   return (
-    <div ref={mapRef} className={cn(["h-screen w-full"])}>
+    <div ref={mapRef} className={cn(["h-screen w-full relative"])}>
       {isMapLoaded && children}
     </div>
   );

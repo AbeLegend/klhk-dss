@@ -1,11 +1,21 @@
 // local
 import { WebServiceModel } from "@/api/types";
 
+export interface PropertiesModel {
+  Key: string,
+  Value: string,
+  Index: number
+}
+
+export interface DataWebserviceByGeom {
+  WebService: WebServiceModel
+  Properties: PropertiesModel[]
+}
 export interface UriTitleMapType {
   isActive: boolean;
   isUsed: boolean;
   UriTitle: string;
-  data?: WebServiceModel[]
+  data?: DataWebserviceByGeom[]
 }
 
 export interface ReduxLocation {

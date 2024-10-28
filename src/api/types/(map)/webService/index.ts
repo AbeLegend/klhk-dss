@@ -7,6 +7,7 @@ Rules Create Type
 */
 
 import { BaseResponse, DynamicStringModel } from "@/api/types";
+import { PropertiesModel } from "@/redux/Map/MapInteraktif";
 
 // BEGIN: WebService
 
@@ -45,7 +46,7 @@ export interface WebServiceAllResponse extends BaseResponse {
 export interface WebServiceGetPropertiesByGeomResponse extends BaseResponse {
   Data: {
     WebService: WebServiceModel
-    Properties: DynamicStringModel[]
+    Properties: PropertiesModel[]
   }[]
 }
 // END: WebServiceWithProperties

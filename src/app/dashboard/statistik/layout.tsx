@@ -2,11 +2,11 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Dashboard B",
-  description: "DSS KLHK - Dashboard B",
+  title: "Dashboard Statistik",
+  description: "DSS KLHK - Dashboard Statistik",
 };
 
-export default function DashboardBLayout({
+export default function DashboardStatistikLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;

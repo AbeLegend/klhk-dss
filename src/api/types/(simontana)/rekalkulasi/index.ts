@@ -18,8 +18,13 @@ export interface RekalkulasiStatisticType {
     Legend: {
       Tutupan: string,
       Value: string
-    }[]
-  }
+    }[],
+  },
+  Color: {
+    Name: string,
+    Tutupan: string,
+    Value: string,
+  }[],
 }
 
 export interface RekalkulasiStatisticResponse extends BaseResponse {

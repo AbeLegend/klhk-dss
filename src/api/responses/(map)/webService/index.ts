@@ -37,6 +37,27 @@ export async function getAPIWebServiceAllByUriTitle(UriTitle: string): Promise<A
     }
   }
 }
+export async function getAPIWebServiceGetPropertiesByGeom(data: {
+  latitude: number,
+  longitude: number
+}): Promise<AxiosResponse<WebServiceGetPropertiesByGeomResponse>> {
+  try {
+    const res = await fetch.get(`/WebService/get_properties_by_geom`, {
+      params: {
+        longitude: data.longitude,
+        latitude: data.latitude
+      }
+    });
+    return res;
+  } catch (error) {
+    if (error instanceof AxiosError && error.response) {
+      const errorMessage = error.response.data.message || "An error occurred";
+      throw new Error(errorMessage);
+    } else {
+      throw new Error("An unexpected error occurred");
+    }
+  }
+}
 export async function getAPIWebServiceAll(): Promise<AxiosResponse<WebServiceAllResponse>> {
   try {
     const res = await fetch.get(`/WebService/all`);

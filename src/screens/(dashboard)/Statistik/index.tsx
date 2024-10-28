@@ -1,11 +1,12 @@
 "use client";
 // lib
 import dynamic from "next/dynamic";
-import { FC, useEffect, useState } from "react";
+import { FC, useEffect, useLayoutEffect, useState } from "react";
 import { HiOutlineDownload } from "react-icons/hi";
 import { Props as ChartProps } from "react-apexcharts";
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
-
+import Cookies from "js-cookie";
+import { jwtDecode } from "jwt-decode";
 // local
 import { CardScreen, Navbar } from "@/components/templates";
 import {
@@ -15,16 +16,19 @@ import {
   Dropdown,
 } from "@/components/atoms";
 import {
+  COOKIE_TOKEN,
+  decryptText,
   formatDate,
   formatNumber,
-  generateUniqueColors,
   OptionsType,
 } from "@/lib";
 import {
   getAPICityAll,
   getAPIProvinceAll,
+  getAPIRoleGetById,
   getAPITahunAll,
   getAPITutupanLahanAll,
+  getAPIUserGetById,
   postAPIRekalkulasiStatistic,
 } from "@/api/responses";
 
@@ -45,15 +49,19 @@ import {
   SelectedTahunProps,
   SelectedTutupanLahanProps,
 } from "./type";
+import { useRouter } from "next/navigation";
 
-export const DashboardBScreen: FC<DashboardScreenProps> = () => {
+export const DashboardStatistikScreen: FC<DashboardScreenProps> = () => {
+  // token
+  const token = Cookies.get(COOKIE_TOKEN);
   // variable
   const currentDate = formatDate(new Date(), "dddd, D MMMM YYYY");
   const barHeight = 10;
   const padding = 250;
+  // useRouter
+  const router = useRouter();
   // useState - loading
   const [isLoading, setIsLoading] = useState<IsLoadingProps>(initIsLoading);
-
   // useState - dropdown
   const [provinceData, setProvinceData] = useState<OptionsType[]>([]);
   const [selectedProvince, setSelectedProvince] =
@@ -247,7 +255,30 @@ export const DashboardBScreen: FC<DashboardScreenProps> = () => {
       ? rekalkulasi.options.xaxis.categories.length * barHeight + padding
       : 200;
 
-  //
+  // loadData - user
+  const loadUserData = async () => {
+    setIsLoading((value) => ({ ...value, user: true }));
+    try {
+      if (token) {
+        const dec: {
+          sub: string;
+        } = jwtDecode(decryptText(token));
+        await getAPIUserGetById(dec.sub).then(async (res) => {
+          const idRole = res.data.Data.Roles[0].Id;
+          const response = await getAPIRoleGetById(idRole);
+          const hasInteractivePermission =
+            response.data.Data.Permissions.includes("Pages.Statistik");
+          if (!hasInteractivePermission) {
+            router.replace("/map-interaktif");
+          }
+        });
+      }
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setIsLoading((value) => ({ ...value, user: false }));
+    }
+  };
 
   // loadData - dropdown
   const loadProvinsi = async () => {
@@ -350,9 +381,21 @@ export const DashboardBScreen: FC<DashboardScreenProps> = () => {
         IdCity: formData.IdCity,
         IdTutupanLahan: formData.IdTutupanLahan,
       });
+
       if (status === 200) {
         const legendData = data.Data.Info.Legend.map((item) => item.Tutupan);
-        const valueData = data.Data.Info.Legend.map((item) => item.Value);
+        const valueData = data.Data.Info.Legend.map((item) =>
+          Number(item.Value)
+        );
+
+        // Map legend to corresponding colors from the API Color array
+        const colorsMap = new Map(
+          data.Data.Color.map(({ Tutupan, Value }) => [Tutupan, Value])
+        );
+        const colors = legendData.map(
+          (tutupan) => colorsMap.get(tutupan) || "#000000"
+        ); // Default to black if color not found
+
         setRekalkulasi((value) => ({
           ...value,
           series: [
@@ -363,15 +406,14 @@ export const DashboardBScreen: FC<DashboardScreenProps> = () => {
           ],
           options: {
             ...value.options,
-            colors: generateUniqueColors(valueData.length),
+            colors,
             xaxis: {
               ...(Array.isArray(value.options?.xaxis)
                 ? value.options.xaxis[0]
                 : value.options?.xaxis),
               categories: legendData,
-              max: Math.max(...valueData.map(Number)) * 1.2,
+              max: Math.max(...valueData) * 1.2,
               min: 0,
-              // range: 10000,
             },
             yaxis: {
               ...(Array.isArray(value.options?.yaxis)
@@ -471,7 +513,13 @@ export const DashboardBScreen: FC<DashboardScreenProps> = () => {
     }
   }, [isFirstLoad, selectedTahun.rekalkulasi]);
 
-  return (
+  useLayoutEffect(() => {
+    loadUserData();
+  }, []);
+
+  return isLoading.user ? (
+    <></>
+  ) : (
     <div>
       <Navbar />
       <CardScreen

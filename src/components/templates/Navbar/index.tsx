@@ -31,8 +31,8 @@ export const Navbar: FC = () => {
         <div className="col-span-5 flex items-center justify-center">
           <Menu
             title="Overview"
-            icon={<Icon name="OverviewIcon" className="text-white" />}
-            isActive={false}
+            icon={<Icon name="OverviewIcon" className="text-accent" />}
+            isActive={true}
           />
           <Menu
             title="Perencanaan"
@@ -46,9 +46,9 @@ export const Navbar: FC = () => {
           />
           <Menu
             title="Monitoring"
-            icon={<Icon name="MonitoringIcon" className="text-accent" />}
-            isActive={true}
-            isDropdown={true}
+            icon={<Icon name="MonitoringIcon" className="text-white" />}
+            isActive={false}
+            isDropdown={false}
             dropdownItem={[
               {
                 name: "Monitoring Evaluasi",
