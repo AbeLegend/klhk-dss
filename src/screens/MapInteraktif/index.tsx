@@ -509,7 +509,7 @@ const Sidebar = forwardRef((_, ref) => {
                         )
                     );
                   })
-                  .map((dataItem) => {
+                  .map((dataItem, dataIndex) => {
                     const { Properties, WebService } = dataItem;
 
                     // Additional conditions to display based on your logic
@@ -522,7 +522,10 @@ const Sidebar = forwardRef((_, ref) => {
                       Properties.length > 2 && Properties.length < 5;
 
                     return (
-                      <ContainerInformation title={WebService.Category}>
+                      <ContainerInformation
+                        title={WebService.Category}
+                        key={dataIndex}
+                      >
                         <ContainerData
                           containerClassName={cn([
                             "grid-cols-2",
@@ -591,3 +594,5 @@ const Sidebar = forwardRef((_, ref) => {
     )
   );
 });
+
+Sidebar.displayName = "Sidebar";
