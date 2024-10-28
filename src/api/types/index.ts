@@ -1,6 +1,7 @@
 export * from "./base";
 // (user)
 export * from "./(user)";
+export * from "./(role)";
 // (util)
 export * from "./(util)/city";
 export * from "./(util)/province";

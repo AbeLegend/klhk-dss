@@ -7,22 +7,32 @@ import {
   useRef,
   useState,
   useImperativeHandle,
+  useLayoutEffect,
 } from "react";
 import "@arcgis/core/assets/esri/themes/light/main.css";
 import dynamic from "next/dynamic";
 import { useDispatch } from "react-redux";
 import Search from "@arcgis/core/widgets/Search";
 import { HiOutlineX } from "react-icons/hi";
+import Cookies from "js-cookie";
+import { jwtDecode } from "jwt-decode";
 
 // local
-import { cn, copyToClipboard } from "@/lib";
-import { Chip, DropdownLayer, SVGIcon } from "@/components/atoms";
+import { cn, COOKIE_TOKEN, copyToClipboard, decryptText } from "@/lib";
+import {
+  Chip,
+  DropdownLayer,
+  SkeletonLoading,
+  SVGIcon,
+} from "@/components/atoms";
 
 // asset
 import LocationCrosshairsSVG from "@/icons/location-crosshairs.svg";
 import { ContainerData, ContainerInformation } from "@/components/molecules";
 import { DataDisplayComponent, FloatNavbar } from "@/components/templates";
 import {
+  getAPIRoleGetById,
+  getAPIUserGetById,
   getAPIWebServiceAllByUriTitle,
   getAPIWebServiceAllUriTitle,
   getAPIWebServiceGetPropertiesByGeom,
@@ -39,26 +49,66 @@ import {
   UriTitleMapType,
 } from "@/redux/Map/MapInteraktif";
 import { useAppSelector } from "@/redux/store";
+import { useRouter } from "next/navigation";
 
 const MapComponent = dynamic(() => import("./map"), {
   ssr: false,
 });
 
 export const MapInteraktifScreen: FC = () => {
+  // token
+  const token = Cookies.get(COOKIE_TOKEN);
+
+  // useState
   const [searchWidget, setSearchWidget] = useState<Search | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  // useRef
   const sidebarRef = useRef<{ triggerAction: () => void }>(null);
+  // useRouter
+  const router = useRouter();
+  // handle
   const handleTriggerSidebarAction = () => {
     sidebarRef.current?.triggerAction();
   };
+  // function
+  const loadUserData = async () => {
+    setIsLoading(true);
+    try {
+      if (token) {
+        const dec: {
+          sub: string;
+        } = jwtDecode(decryptText(token));
+        await getAPIUserGetById(dec.sub).then(async (res) => {
+          const idRole = res.data.Data.Roles[0].Id;
+          const response = await getAPIRoleGetById(idRole);
+          const hasInteractivePermission =
+            response.data.Data.Permissions.includes("Pages.Map.Interactive");
+          if (!hasInteractivePermission) {
+            router.replace("/dashboard");
+          }
+        });
+      }
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  // useLayoutEffect
+  useLayoutEffect(() => {
+    loadUserData();
+  }, [token]);
   return (
     <main>
-      <MapComponent
-        onSearchWidgetReady={(search) => setSearchWidget(search)}
-        onTriggerSidebar={handleTriggerSidebarAction}
-      >
-        <FloatNavbar searchWidget={searchWidget} />
-        <Sidebar ref={sidebarRef} />
-      </MapComponent>
+      {!isLoading && (
+        <MapComponent
+          onSearchWidgetReady={(search) => setSearchWidget(search)}
+          onTriggerSidebar={handleTriggerSidebarAction}
+        >
+          <FloatNavbar searchWidget={searchWidget} />
+          <Sidebar ref={sidebarRef} />
+        </MapComponent>
+      )}
     </main>
   );
 };
@@ -282,58 +332,6 @@ const Sidebar = forwardRef((_, ref) => {
     )
   );
 
-  // Membuat daftar judul grup yang unik dan menyimpan kategori yang terkait
-
-  // TODO: GROUPED DATA
-  // const groupedData = Array.from(
-  //   layer
-  //     .filter((item) => item.isActive)
-  //     .flatMap((item) => item.data || [])
-  //     .reduce((acc, item) => {
-  //       const groupTitle = item.WebService.Group?.Title;
-  //       const title = item.WebService.Title;
-  //       const category = item.WebService.Category;
-  //       const groupCategory = item.WebService.GroupCategory;
-  //       const properties = item.Properties;
-
-  //       // Jika groupTitle atau category atau properties tidak ada, lewati iterasi ini
-  //       if (!groupTitle || !category || !properties) return acc;
-
-  //       // Temukan atau buat entri baru untuk groupTitle
-  //       let groupEntry = acc.get(groupTitle);
-  //       if (!groupEntry) {
-  //         groupEntry = {
-  //           groupTitle,
-  //           categories: [],
-  //         };
-  //         acc.set(groupTitle, groupEntry);
-  //       }
-
-  //       // Temukan atau buat entri untuk category dalam groupEntry
-  //       const categoryEntry = groupEntry.categories.find(
-  //         (cat) => cat.title === category
-  //       );
-
-  //       if (!categoryEntry) {
-  //         // Tambahkan kategori baru jika belum ada
-  //         groupEntry.categories.push({
-  //           title: category,
-  //           groupCategory,
-  //           properties,
-  //         });
-  //       } else {
-  //         // Update existing category with properties if necessary
-  //         categoryEntry.properties.push(...properties);
-  //       }
-
-  //       return acc;
-  //     }, new Map<string, { groupTitle: string; categories: { title: string; groupCategory: string | null; properties: DynamicStringModel[] }[] }>())
-  //     .values()
-  // ).map((group) => ({
-  //   ...group,
-  //   categories: group.categories.sort((a, b) => a.title.localeCompare(b.title)),
-  // }));
-
   return (
     isOpenModal && (
       <div
@@ -471,76 +469,59 @@ const Sidebar = forwardRef((_, ref) => {
               <div className="w-full h-[1px] bg-gray-50" />
             )}
 
-            {/* {groupedData
-              .filter((item) => item.groupTitle === groupTitleText)
-              .map((mapItem) => {
-                return mapItem.categories.map((cat, index) => {
-                  const properties: { key: string; value: string }[] =
-                    Object.entries(cat.properties[0]).map(([key, value]) => {
-                      return { key, value };
-                    });
-                  return (
-                    <ContainerInformation title={cat.title} key={index}>
-                      <ContainerData
-                        containerClassName="grid-cols-4"
-                        data={properties.map((item, index) => {
-                          const { key, value } = item;
-                          return { description: value, title: key };
-                        })}
-                      />
-                    </ContainerInformation>
-                  );
-                });
-              })} */}
-            {activeData.map((item, index) => {
-              return (
-                item.data &&
-                item.data
-                  .filter((dataItem, i, self) => {
-                    // Ensure unique WebService.Group.Title and non-empty Properties
-                    const { WebService, Properties } = dataItem;
-                    return (
-                      Properties.length > 0 && // Only include items with non-empty Properties
-                      i ===
-                        self.findIndex(
-                          (otherItem) =>
-                            otherItem.WebService.Group.Title ===
-                            WebService.Group.Title
-                        )
-                    );
-                  })
-                  .map((dataItem, dataIndex) => {
-                    const { Properties, WebService } = dataItem;
+            {isLoading.getPropertiesByGeom || isLoading.byAllUriTitle ? (
+              <SkeletonLoading className="h-10" />
+            ) : (
+              activeData.map((item, index) => {
+                return (
+                  item.data &&
+                  item.data
+                    .filter((dataItem, i, self) => {
+                      // Ensure unique WebService.Group.Title and non-empty Properties
+                      const { WebService, Properties } = dataItem;
+                      return (
+                        Properties.length > 0 && // Only include items with non-empty Properties
+                        i ===
+                          self.findIndex(
+                            (otherItem) =>
+                              otherItem.WebService.Group.Title ===
+                              WebService.Group.Title
+                          )
+                      );
+                    })
+                    .map((dataItem, dataIndex) => {
+                      const { Properties, WebService } = dataItem;
 
-                    // Additional conditions to display based on your logic
-                    const shouldDisplayGroup =
-                      WebService.Group.Title === groupTitleText;
-                    const shouldDisplayCategory =
-                      WebService.GroupCategory === groupCategoryText;
+                      // Additional conditions to display based on your logic
+                      const shouldDisplayGroup =
+                        WebService.Group.Title === groupTitleText;
+                      const shouldDisplayCategory =
+                        WebService.GroupCategory === groupCategoryText;
 
-                    const FourGrid =
-                      Properties.length > 2 && Properties.length < 5;
+                      const FourGrid =
+                        Properties.length > 2 && Properties.length < 5;
 
-                    return (
-                      <ContainerInformation
-                        title={WebService.Category}
-                        key={dataIndex}
-                      >
-                        <ContainerData
-                          containerClassName={cn([
-                            "grid-cols-2",
-                            FourGrid && "grid-cols-4",
-                          ])}
-                          data={Properties.map((property) => ({
-                            title: property.Key,
-                            description: property.Value,
-                          }))}
-                        />
-                      </ContainerInformation>
-                    );
-                  })
-              );
-            })}
+                      return (
+                        <ContainerInformation
+                          title={WebService.Category}
+                          key={dataIndex}
+                        >
+                          <ContainerData
+                            containerClassName={cn([
+                              "grid-cols-2",
+                              FourGrid && "grid-cols-4",
+                            ])}
+                            data={Properties.map((property) => ({
+                              title: property.Key,
+                              description: property.Value,
+                            }))}
+                          />
+                        </ContainerInformation>
+                      );
+                    })
+                );
+              })
+            )}
 
             {/* perencanaan No. 1 */}
             {/* <ContainerInformation title="Perencanaan">
