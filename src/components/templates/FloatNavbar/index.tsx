@@ -7,6 +7,7 @@ import { HiOutlineSearch } from "react-icons/hi";
 import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import Search from "@arcgis/core/widgets/Search";
+import Cookies from "js-cookie";
 
 // local
 import { Button, Icon, Input } from "@/components/atoms";
@@ -14,6 +15,7 @@ import { setSearchLocation } from "@/redux/Map/MapInteraktif/slice";
 import { useClickOutside } from "@/hook";
 // asset
 import LogoFullImage from "@/images/logo/logo-full-dark.png";
+import { COOKIE_TOKEN } from "@/lib";
 
 // type
 interface FloatNavbarProps {
@@ -155,7 +157,8 @@ export const FloatNavbar: FC<FloatNavbarProps> = ({ searchWidget }) => {
           <div
             className="flex gap-x-3 cursor-pointer"
             onClick={() => {
-              //
+              Cookies.remove(COOKIE_TOKEN);
+              router.push("/login");
             }}
           >
             <div className="rounded-full bg-[#F0F1F5] min-w-11 min-h-11 w-11 h-11" />
