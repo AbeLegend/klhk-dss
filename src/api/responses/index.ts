@@ -10,4 +10,5 @@ export * from "./(util)/tutupanLahan";
 export * from "./(simontana)/rekalkulasi";
 // (map)
 export * from "./(map)/webService";
+export * from "./(map)/webServiceReference";
 
