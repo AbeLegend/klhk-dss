@@ -13,6 +13,10 @@ const nextConfig = {
         source: "/klhk-dss/:path*",
         destination: "https://geoportal.menlhk.go.id/:path*",
       },
+      {
+        source: "/klhk-dss/:path*",
+        destination: "https://nfms.menlhk.go.id:8443/:path*",
+      },
     ];
   },
 };

@@ -1,10 +1,10 @@
 // lib
 import { FC } from "react";
 // local
-import { MapInteraktifScreen } from "@/screens";
+import { MapInteraktifScreenHardCoded } from "@/screens";
 
 const MapInteraktif: FC = () => {
-  return <MapInteraktifScreen />;
+  return <MapInteraktifScreenHardCoded />;
 };
 
 export default MapInteraktif;
