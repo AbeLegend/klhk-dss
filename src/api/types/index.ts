@@ -12,4 +12,5 @@ export * from "./(simontana)/rekalkulasi";
 // export * from "./(simontana)/serial";
 // (map)
 export * from "./(map)/webService";
+export * from "./(map)/webServiceReference";
 
