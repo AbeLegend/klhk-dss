@@ -6,7 +6,7 @@ Rules Create Type
 [ ] For Object = Model
 */
 
-import { BaseResponse, DynamicStringModel } from "@/api/types";
+import { BaseResponse } from "@/api/types";
 import { PropertiesModel } from "@/redux/Map/MapInteraktif";
 
 // BEGIN: WebService

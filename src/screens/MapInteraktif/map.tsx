@@ -150,7 +150,7 @@ const MapComponent: FC<{
 
   useEffect(() => {
     getUrlFromLayer();
-    console.log({ layer });
+    // console.log({ layer });
   }, [layer]);
 
   return (
