@@ -1,5 +1,6 @@
 // Auth
 export * from "./(auth)/Login";
+export * from "./(auth)/Login/index2";
 // Dashboard
 export * from "./(dashboard)/Statistik";
 export * from "./(dashboard)/Root";

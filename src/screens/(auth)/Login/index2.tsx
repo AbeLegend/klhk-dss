@@ -24,7 +24,7 @@ interface FormValuesType {
 }
 const SITE_KEY = process.env.NEXT_PUBLIC_SITE_KEY as string;
 
-export const LoginScreen: FC = () => {
+export const LoginScreen2: FC = () => {
   // State
   const [initialValues, setInitialValues] = useState<FormValuesType>({
     Username: "",

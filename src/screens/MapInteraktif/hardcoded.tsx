@@ -720,6 +720,9 @@ const Sidebar = forwardRef((_, ref) => {
       }, 1500);
     }
   }, [isCopied]);
+  useEffect(() => {
+    console.log({ groupTitleText });
+  }, [groupTitleText]);
 
   // Informasi Wilayah: https://geoportal.menlhk.go.id/server/rest/services/SIGAP_Interaktif/Adm_KabKot_Sept2023/MapServer
   // Perencanaan:
@@ -897,61 +900,62 @@ const Sidebar = forwardRef((_, ref) => {
             {/* line */}
             <div className="w-full h-[1px] bg-gray-50" />
 
-            {(groupTitleText === "Laju Perubahan" &&
-              isLoading.getPropertiesByGeom) ||
-            isLoading.byAllUriTitle ? (
-              <SkeletonLoading className="h-10" />
-            ) : (
-              activeData.map((item, index) => {
-                return (
-                  item.data &&
-                  item.data
-                    .filter((dataItem, i, self) => {
-                      // Ensure unique WebService.Group.Title and non-empty Properties
-                      const { WebService, Properties } = dataItem;
-                      return (
-                        Properties.length > 0 && // Only include items with non-empty Properties
-                        i ===
-                          self.findIndex(
-                            (otherItem) =>
-                              otherItem.WebService.Group.Title ===
-                              WebService.Group.Title
-                          )
-                      );
-                    })
-                    .map((dataItem, dataIndex) => {
-                      const { Properties, WebService } = dataItem;
+            {groupTitleText === "Laju Perubahan" ? (
+              isLoading.getPropertiesByGeom || isLoading.byAllUriTitle ? (
+                <SkeletonLoading className="h-10" />
+              ) : (
+                activeData.map((item, index) => {
+                  return (
+                    item.data &&
+                    item.data
+                      .filter((dataItem, i, self) => {
+                        // Pastikan hanya item dengan WebService.Group.Title unik dan Properties yang tidak kosong
+                        const { WebService, Properties } = dataItem;
+                        return (
+                          Properties.length > 0 &&
+                          i ===
+                            self.findIndex(
+                              (otherItem) =>
+                                otherItem.WebService.Group.Title ===
+                                WebService.Group.Title
+                            )
+                        );
+                      })
+                      .map((dataItem, dataIndex) => {
+                        const { Properties, WebService } = dataItem;
 
-                      // Additional conditions to display based on your logic
-                      const shouldDisplayGroup =
-                        WebService.Group.Title === groupTitleText;
-                      const shouldDisplayCategory =
-                        WebService.GroupCategory === groupCategoryText;
+                        // Kondisi tambahan untuk menampilkan data sesuai logika yang diinginkan
+                        const shouldDisplayGroup =
+                          WebService.Group.Title === groupTitleText;
+                        const shouldDisplayCategory =
+                          WebService.GroupCategory === groupCategoryText;
 
-                      const FourGrid =
-                        Properties.length > 2 && Properties.length < 5;
+                        const FourGrid =
+                          Properties.length > 2 && Properties.length < 5;
 
-                      return (
-                        <ContainerInformation
-                          title={WebService.Category}
-                          key={dataIndex}
-                        >
-                          <ContainerData
-                            containerClassName={cn([
-                              "grid-cols-2",
-                              FourGrid && "grid-cols-4",
-                            ])}
-                            data={Properties.map((property) => ({
-                              title: property.Key,
-                              description: property.Value,
-                            }))}
-                          />
-                        </ContainerInformation>
-                      );
-                    })
-                );
-              })
-            )}
+                        return (
+                          <ContainerInformation
+                            title={WebService.Category}
+                            key={dataIndex}
+                          >
+                            <ContainerData
+                              containerClassName={cn([
+                                "grid-cols-2",
+                                FourGrid && "grid-cols-4",
+                              ])}
+                              data={Properties.map((property) => ({
+                                title: property.Key,
+                                description: property.Value,
+                              }))}
+                            />
+                          </ContainerInformation>
+                        );
+                      })
+                  );
+                })
+              )
+            ) : null}
+
             {groupTitleText === "Alur & Status Tahapan" && (
               <Dropdown
                 items={[
