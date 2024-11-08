@@ -18,11 +18,13 @@ import Cookies from "js-cookie";
 // local
 import { cn, COOKIE_TOKEN, copyToClipboard } from "@/lib";
 import {
+  Button,
   Chip,
   Dropdown,
   DropdownLayer,
   SkeletonLoading,
   SVGIcon,
+  TimelineItem,
 } from "@/components/atoms";
 import { ContainerData, ContainerInformation } from "@/components/molecules";
 import { FloatNavbar } from "@/components/templates";
@@ -485,7 +487,58 @@ const Sidebar = forwardRef((_, ref) => {
     },
     {
       groupTitle: "Evaluasi",
-      data: null,
+      data: {
+        tab: ["Amdal", "UKL-UPL"],
+        noTitle: {
+          title: "",
+          data1: [
+            {
+              title: "Nama Perusahaan",
+              value: "PT Adaro Energy Tbk",
+            },
+            {
+              title: "No Registrasi",
+              value: "66F23188B95EA",
+            },
+          ],
+          data2: [
+            {
+              title: "Penanggung Jawab",
+              value: "DRH.JULIUS STIAWAN JO",
+            },
+            {
+              title: "Alamat Email",
+              value: "petrotamaiss@gmail.com",
+            },
+          ],
+        },
+        dokumen: {
+          title: "Dokumen",
+          data1: [
+            "Surat Kesesuaian Tata Ruang",
+            "Peta Tapak Proyek",
+            "Dokumen Hasil Penapisan di OSS",
+            "Dokumen SPPL dari OSS",
+          ],
+        },
+        statusTracking: {
+          title: "Status Tracking",
+          data1: [
+            {
+              title: "Penapisan Otomatis Selesai oleh PT Adaro Enegy Tbk",
+              value: "23-01-2024 11:05:28",
+            },
+            {
+              title: "Pembentukan Tim Penyusun",
+              value: "23-01-2024 11:05:28",
+            },
+            {
+              title: "Penyusunan Formulir UKL-UPL",
+              value: "23-01-2024 11:05:28",
+            },
+          ],
+        },
+      },
     },
   ];
 
@@ -498,6 +551,7 @@ const Sidebar = forwardRef((_, ref) => {
     useState<string>("Persetujuan");
   const [activeTabPersetujuan, setActiveTabPersetujuan] =
     useState<string>("PPHTR");
+  const [activeTabEvaluasi, setActiveTabEvaluasi] = useState<string>("Amdal");
 
   const [isCopied, setIsCopied] = useState<boolean>(false);
   // useState - isLoading
@@ -515,6 +569,7 @@ const Sidebar = forwardRef((_, ref) => {
   const alurData = hardcoded.find(
     (item) => item.groupTitle === "Alur & Status Tahapan"
   );
+  const evaluasiData = hardcoded.find((item) => item.groupTitle === "Evaluasi");
   // className
   const activeClassName = "bg-primary shadow-xsmall cursor-default";
   const inActiveClassName = "bg-white shadow-xsmall cursor-pointer";
@@ -863,7 +918,7 @@ const Sidebar = forwardRef((_, ref) => {
             </div>
             {/* line */}
             <div className="w-full h-[1px] bg-gray-50" />
-
+            {/* TODO: Laju Perubahan  */}
             {groupTitleText === "Laju Perubahan" ? (
               isLoading.getPropertiesByGeom || isLoading.byAllUriTitle ? (
                 <SkeletonLoading className="h-10" />
@@ -920,6 +975,7 @@ const Sidebar = forwardRef((_, ref) => {
               )
             ) : null}
 
+            {/* TODO: Alur & Status Tahapan  */}
             {groupTitleText === "Alur & Status Tahapan" && (
               <Dropdown
                 items={[
@@ -954,15 +1010,15 @@ const Sidebar = forwardRef((_, ref) => {
                   <div className="rounded-lg flex w-full mb-6">
                     {alurData &&
                       alurData.data &&
+                      alurData.data.persetujuan &&
                       alurData.data.persetujuan.tab.map((item, index) => {
+                        const length = alurData.data.persetujuan?.tab.length;
                         return (
                           <div
                             key={index}
                             className={cn([
                               index === 0 && "rounded-l-lg",
-                              index + 1 ==
-                                alurData.data.persetujuan.tab.length &&
-                                "rounded-r-lg",
+                              index + 1 == length && "rounded-r-lg",
                               "bg-white shadow-small border cursor-pointer",
                               activeTabPersetujuan === item &&
                                 "bg-primary text-white cursor-default",
@@ -981,6 +1037,7 @@ const Sidebar = forwardRef((_, ref) => {
                   {activeTabPersetujuan === "PPHTR" &&
                     alurData &&
                     alurData.data &&
+                    alurData.data.persetujuan &&
                     alurData.data.persetujuan.PPHTR && (
                       <ContainerInformation
                         title={alurData.data.persetujuan.PPHTR.title}
@@ -1012,6 +1069,7 @@ const Sidebar = forwardRef((_, ref) => {
                   {activeTabPersetujuan === "PPHD" &&
                     alurData &&
                     alurData.data &&
+                    alurData.data.persetujuan &&
                     alurData.data.persetujuan.PPHD && (
                       <ContainerInformation
                         title={alurData.data.persetujuan.PPHD.title}
@@ -1032,6 +1090,7 @@ const Sidebar = forwardRef((_, ref) => {
                   {activeTabPersetujuan === "PKK" &&
                     alurData &&
                     alurData.data &&
+                    alurData.data.persetujuan &&
                     alurData.data.persetujuan.PKK && (
                       <ContainerInformation
                         title={alurData.data.persetujuan.PKK.title}
@@ -1063,6 +1122,7 @@ const Sidebar = forwardRef((_, ref) => {
                   {activeTabPersetujuan === "PPKHN" &&
                     alurData &&
                     alurData.data &&
+                    alurData.data.persetujuan &&
                     alurData.data.persetujuan.PPKHN && (
                       <ContainerInformation
                         title={alurData.data.persetujuan.PPKHN.title}
@@ -1094,6 +1154,7 @@ const Sidebar = forwardRef((_, ref) => {
                   {activeTabPersetujuan === "PPKH Eksplorasi" &&
                     alurData &&
                     alurData.data &&
+                    alurData.data.persetujuan &&
                     alurData.data.persetujuan.PPKHEksporasi && (
                       <ContainerInformation
                         title={alurData.data.persetujuan.PPKHEksporasi.title}
@@ -1125,6 +1186,7 @@ const Sidebar = forwardRef((_, ref) => {
                   {activeTabPersetujuan === "Non Tambang" &&
                     alurData &&
                     alurData.data &&
+                    alurData.data.persetujuan &&
                     alurData.data.persetujuan.NonTambang && (
                       <ContainerInformation
                         title={alurData.data.persetujuan.NonTambang.title}
@@ -1467,53 +1529,110 @@ const Sidebar = forwardRef((_, ref) => {
                     )}
                 </div>
               )}
-
-            {/* perencanaan No. 1 */}
-            {/* <ContainerInformation title="Perencanaan">
-              <ContainerData
-                containerClassName="grid-cols-2"
-                data={[
-                  {
-                    title: "Fungsi",
-                    description: "Cagar Alam",
-                  },
-                  {
-                    title: "Luas",
-                    description: "500 Ha",
-                    dataClassName: "justify-self-end",
-                  },
-                ]}
-              />
-            </ContainerInformation> */}
-            {/* pengelolaan No. 1 */}
-            {/* <ContainerInformation title="Pengelolaan">
-              <div className="flex">
-                <div
-                  className={cn([
-                    "py-[10px] px-4 bg-primary rounded-l-lg",
-                    activeClassName,
-                    "border border-gray-300",
-                    "w-1/2",
-                  ])}
-                >
-                  <p className="text-body-3 text-white font-medium text-center">
-                    Informasi
-                  </p>
+            {/* TODO: Evaluasi */}
+            {groupTitleText === "Evaluasi" && (
+              <div>
+                <div className="rounded-lg flex w-full mb-6">
+                  {evaluasiData &&
+                    evaluasiData.data &&
+                    evaluasiData.data.tab &&
+                    evaluasiData.data.tab.map((item, index) => {
+                      const length = evaluasiData.data.tab?.length;
+                      return (
+                        <div
+                          key={index}
+                          className={cn([
+                            index === 0 && "rounded-l-lg",
+                            index + 1 == length && "rounded-r-lg",
+                            "bg-white shadow-small border cursor-pointer",
+                            activeTabEvaluasi === item &&
+                              "bg-primary text-white cursor-default",
+                          ])}
+                          onClick={() => {
+                            setActiveTabEvaluasi(item);
+                          }}
+                        >
+                          <p className={cn(["py-[9px] px-4 text-body-3"])}>
+                            {item}
+                          </p>
+                        </div>
+                      );
+                    })}
                 </div>
-                <div
-                  className={cn([
-                    "py-[10px] px-4 bg-primary rounded-r-lg",
-                    inActiveClassName,
-                    "border border-gray-300",
-                    "w-1/2",
-                  ])}
-                >
-                  <p className="text-body-3 text-gray-700 font-medium text-center">
-                    History dan Perubahan
-                  </p>
-                </div>
+                {evaluasiData &&
+                  evaluasiData.data &&
+                  evaluasiData.data.noTitle && (
+                    <div>
+                      {/* TODO: No Title */}
+                      <ContainerInformation title={""}>
+                        <ContainerData
+                          containerClassName="grid-cols-2"
+                          data={evaluasiData.data.noTitle.data1.map(
+                            (item, index) => {
+                              return {
+                                description: item.value,
+                                title: item.title,
+                              };
+                            }
+                          )}
+                        />
+                        <ContainerData
+                          containerClassName="grid-cols-2 mt-4"
+                          data={evaluasiData.data.noTitle.data2.map(
+                            (item, index) => {
+                              return {
+                                description: item.value,
+                                title: item.title,
+                              };
+                            }
+                          )}
+                        />
+                      </ContainerInformation>
+                      {/* TODO: Dokumen */}
+                      <ContainerInformation
+                        containerClassName="mt-4"
+                        childrenClassName="grid gap-y-4 bg-white p-4 rounded-lg"
+                        title={evaluasiData.data.dokumen.title}
+                      >
+                        {evaluasiData.data.dokumen.data1.map((item, index) => {
+                          return (
+                            <div
+                              key={index}
+                              className="flex items-center justify-between"
+                            >
+                              <p className="text-body-3 text-gray-800 font-semibold">
+                                {item}
+                              </p>
+                              <Button label="Lihat Dokumen" variant="outline" />
+                            </div>
+                          );
+                        })}
+                      </ContainerInformation>
+                      {/* TODO: Status Tracking */}
+                      <ContainerInformation
+                        containerClassName="mt-4"
+                        childrenClassName=" bg-white p-4 rounded-lg space-y-6 "
+                        title={evaluasiData.data.statusTracking.title}
+                      >
+                        {evaluasiData.data.statusTracking.data1.map(
+                          (item, index) => {
+                            const length =
+                              evaluasiData.data.statusTracking?.data1.length;
+                            return (
+                              <TimelineItem
+                                key={index}
+                                title={item.title}
+                                timestamp={item.value}
+                                isLast={index + 1 === length}
+                              />
+                            );
+                          }
+                        )}
+                      </ContainerInformation>
+                    </div>
+                  )}
               </div>
-            </ContainerInformation> */}
+            )}
           </div>
         </div>
       </div>
