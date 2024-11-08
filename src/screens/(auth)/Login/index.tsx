@@ -1,6 +1,6 @@
 "use client";
 // lib
-import { FC, useState } from "react";
+import { FC, useLayoutEffect, useState } from "react";
 import * as Yup from "yup";
 import { useFormik } from "formik";
 import ReCAPTCHA from "react-google-recaptcha";
@@ -10,12 +10,20 @@ import Image from "next/image";
 
 // local
 import { postAPIUserLogin } from "@/api/responses/(user)";
-import { cn, COOKIE_EXPIRED_AT, COOKIE_TOKEN, encryptText, syne } from "@/lib";
+import {
+  cn,
+  COOKIE_EXPIRED_AT,
+  COOKIE_TOKEN,
+  decryptText,
+  encryptText,
+  syne,
+} from "@/lib";
 
 // asset
 import LogoFullImage from "@/images/logo/logo-full-dark.png";
 import BackgroundLoginImage from "@/images/background-login.png";
-import { Button, Input } from "@/components/atoms";
+import { AlertModal, Button, Input } from "@/components/atoms";
+import { useAlertModal } from "@/hook";
 
 // type
 interface FormValuesType {
@@ -33,9 +41,14 @@ export const LoginScreen: FC = () => {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
+  // useRouter
   const router = useRouter();
+  // useSearchParams
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirectTo");
+  const sessionExpired = Cookies.get("sessionExpired");
+  // useAlertModal
+  const { isOpen, openModal, closeModal } = useAlertModal();
 
   // Schema untuk validasi
   const validationSchema = Yup.object({
@@ -63,8 +76,8 @@ export const LoginScreen: FC = () => {
 
           if (status === 200) {
             const tokenFromAPI = data.Data.RawToken;
-            const expiredAt = data.Data.ExpiredAt;
-            // const expiredAt = "2024-11-08T10:46:00.1327207+07:00";
+            // const expiredAt = data.Data.ExpiredAt;
+            const expiredAt = "2024-11-08T14:04:00.1327207+07:00";
 
             const encryptedToken = encryptText(tokenFromAPI);
             const encryptedTokenExpired = encryptText(expiredAt);
@@ -95,8 +108,33 @@ export const LoginScreen: FC = () => {
     },
   });
 
+  useLayoutEffect(() => {
+    if (sessionExpired) {
+      const decryptSessionExpired = decryptText(sessionExpired);
+      if (decryptSessionExpired === "true") {
+        openModal();
+      }
+    }
+  }, []);
+
   return (
     <main className="h-screen w-screen bg-white relative">
+      <AlertModal
+        isOpen={isOpen}
+        title="Your session has expired. Please log in again."
+        // message="Do you really want to perform this action?"
+        // onClose={() => {
+        //   console.log("on close");
+        //   Cookies.remove("sessionExpired");
+        //   closeModal();
+        // }}
+        onConfirm={() => {
+          Cookies.remove("sessionExpired");
+          closeModal();
+        }}
+        confirmText="Ok"
+        // cancelText=""
+      />
       <nav className="pt-7 px-[62px] absolute z-[9999]">
         <div className="relative w-[273px] h-[59px]">
           <Image src={LogoFullImage} alt="logo" layout="fill" />

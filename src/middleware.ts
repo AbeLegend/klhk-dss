@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { decryptText, encryptText } from "./lib";
 
 const LOGIN_URL = "/login";
 const MAP_INTERAKTIF_URL = "/map-interaktif";
@@ -16,7 +17,8 @@ export async function middleware(request: NextRequest) {
   // Helper to check expiration time
   const isTokenExpired = (expiry: string | undefined) => {
     if (!expiry) return true;
-    const expiryDate = new Date(expiry);
+    const dateExpired = decryptText(expiry)
+    const expiryDate = new Date(dateExpired);
     return expiryDate <= new Date();
   };
 
@@ -27,8 +29,8 @@ export async function middleware(request: NextRequest) {
 
   // Token expired
   if (token && isTokenExpired(tokenExpiredAt)) {
-    const response = redirect(`${LOGIN_URL}?redirectTo=${redirectTo}`);
-    // response.cookies.set("token_expired_alert", "true", { maxAge: 5 }); // Set cookie for client alert
+    const response = redirect(`${LOGIN_URL}`);
+    response.cookies.set("sessionExpired", encryptText("true")); // Remove token
     response.cookies.delete("token"); // Remove token
     response.cookies.delete("token_expired_at"); // Remove expiration time
     return response;

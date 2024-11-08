@@ -1,2 +1,2 @@
-export * from "./useAutoLogout"
+export * from "./useAlertModal"
 export * from "./useClickOutside"
