@@ -76,8 +76,8 @@ export const LoginScreen: FC = () => {
 
           if (status === 200) {
             const tokenFromAPI = data.Data.RawToken;
-            // const expiredAt = data.Data.ExpiredAt;
-            const expiredAt = "2024-11-08T14:04:00.1327207+07:00";
+            const expiredAt = data.Data.ExpiredAt;
+            // const expiredAt = "2024-11-08T14:04:00.1327207+07:00";
 
             const encryptedToken = encryptText(tokenFromAPI);
             const encryptedTokenExpired = encryptText(expiredAt);
