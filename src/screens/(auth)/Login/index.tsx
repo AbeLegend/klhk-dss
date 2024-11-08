@@ -10,7 +10,7 @@ import Image from "next/image";
 
 // local
 import { postAPIUserLogin } from "@/api/responses/(user)";
-import { cn, COOKIE_TOKEN, encryptText, syne } from "@/lib";
+import { cn, COOKIE_EXPIRED_AT, COOKIE_TOKEN, encryptText, syne } from "@/lib";
 
 // asset
 import LogoFullImage from "@/images/logo/logo-full-dark.png";
@@ -44,6 +44,7 @@ export const LoginScreen: FC = () => {
   });
 
   // Formik untuk menangani form
+
   const form = useFormik<FormValuesType>({
     initialValues,
     validationSchema,
@@ -62,11 +63,18 @@ export const LoginScreen: FC = () => {
 
           if (status === 200) {
             const tokenFromAPI = data.Data.RawToken;
-            // console.log(tokenFromAPI);
+            const expiredAt = data.Data.ExpiredAt;
+            // const expiredAt = "2024-11-08T10:46:00.1327207+07:00";
 
             const encryptedToken = encryptText(tokenFromAPI);
+            const encryptedTokenExpired = encryptText(expiredAt);
 
             Cookies.set(COOKIE_TOKEN, encryptedToken, {
+              secure: true,
+              httpOnly: false,
+              sameSite: "Strict",
+            });
+            Cookies.set(COOKIE_EXPIRED_AT, encryptedTokenExpired, {
               secure: true,
               httpOnly: false,
               sameSite: "Strict",
