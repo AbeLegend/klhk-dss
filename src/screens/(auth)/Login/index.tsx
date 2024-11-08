@@ -13,6 +13,8 @@ import { postAPIUserLogin } from "@/api/responses/(user)";
 import {
   cn,
   COOKIE_EXPIRED_AT,
+  COOKIE_PERMISSIONS,
+  COOKIE_SESSION_EXPIRED,
   COOKIE_TOKEN,
   decryptText,
   encryptText,
@@ -46,7 +48,7 @@ export const LoginScreen: FC = () => {
   // useSearchParams
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirectTo");
-  const sessionExpired = Cookies.get("sessionExpired");
+  const sessionExpired = Cookies.get(COOKIE_SESSION_EXPIRED);
   // useAlertModal
   const { isOpen, openModal, closeModal } = useAlertModal();
 
@@ -77,17 +79,28 @@ export const LoginScreen: FC = () => {
           if (status === 200) {
             const tokenFromAPI = data.Data.RawToken;
             const expiredAt = data.Data.ExpiredAt;
+            const permission = data.Data.User.Permissions;
+            const jsonPermission = JSON.stringify(permission);
+
             // const expiredAt = "2024-11-08T14:04:00.1327207+07:00";
 
             const encryptedToken = encryptText(tokenFromAPI);
             const encryptedTokenExpired = encryptText(expiredAt);
+            const encryptedPermission = encryptText(jsonPermission);
 
             Cookies.set(COOKIE_TOKEN, encryptedToken, {
               secure: true,
               httpOnly: false,
               sameSite: "Strict",
             });
+
             Cookies.set(COOKIE_EXPIRED_AT, encryptedTokenExpired, {
+              secure: true,
+              httpOnly: false,
+              sameSite: "Strict",
+            });
+
+            Cookies.set(COOKIE_PERMISSIONS, encryptedPermission, {
               secure: true,
               httpOnly: false,
               sameSite: "Strict",
@@ -129,7 +142,7 @@ export const LoginScreen: FC = () => {
         //   closeModal();
         // }}
         onConfirm={() => {
-          Cookies.remove("sessionExpired");
+          Cookies.remove(COOKIE_SESSION_EXPIRED);
           closeModal();
         }}
         confirmText="Ok"

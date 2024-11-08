@@ -15,7 +15,7 @@ export interface IsLoadingProps {
   city: boolean;
   penutupanLahan: boolean;
   // user
-  user: boolean
+  // user: boolean
 }
 
 // InitData
@@ -30,7 +30,7 @@ export const initIsLoading: IsLoadingProps = {
   city: false,
   penutupanLahan: false,
   // user
-  user: false
+  // user: false
 };
 // END: IsLoading
 

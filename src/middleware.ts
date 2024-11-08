@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { decryptText, encryptText } from "./lib";
+import { COOKIE_EXPIRED_AT, COOKIE_PERMISSIONS, COOKIE_SESSION_EXPIRED, COOKIE_TOKEN, decryptText, encryptText } from "./lib";
 
 const LOGIN_URL = "/login";
 const MAP_INTERAKTIF_URL = "/map-interaktif";
@@ -30,9 +30,10 @@ export async function middleware(request: NextRequest) {
   // Token expired
   if (token && isTokenExpired(tokenExpiredAt)) {
     const response = redirect(`${LOGIN_URL}`);
-    response.cookies.set("sessionExpired", encryptText("true")); // Remove token
-    response.cookies.delete("token"); // Remove token
-    response.cookies.delete("token_expired_at"); // Remove expiration time
+    response.cookies.set(COOKIE_SESSION_EXPIRED, encryptText("true")); // Remove token
+    response.cookies.delete(COOKIE_TOKEN); // Remove token
+    response.cookies.delete(COOKIE_EXPIRED_AT); // Remove expiration time
+    response.cookies.delete(COOKIE_PERMISSIONS); // Remove expiration time
     return response;
   }
 

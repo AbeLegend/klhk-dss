@@ -1,12 +1,11 @@
 "use client";
 // lib
 import dynamic from "next/dynamic";
-import { FC, useEffect, useLayoutEffect, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import { HiOutlineDownload } from "react-icons/hi";
 import { Props as ChartProps } from "react-apexcharts";
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
-import Cookies from "js-cookie";
-import { jwtDecode } from "jwt-decode";
+
 // local
 import { CardScreen, Navbar } from "@/components/templates";
 import {
@@ -15,20 +14,12 @@ import {
   ContainerCharts,
   Dropdown,
 } from "@/components/atoms";
-import {
-  COOKIE_TOKEN,
-  decryptText,
-  formatDate,
-  formatNumber,
-  OptionsType,
-} from "@/lib";
+import { formatDate, formatNumber, OptionsType } from "@/lib";
 import {
   getAPICityAll,
   getAPIProvinceAll,
-  getAPIRoleGetById,
   getAPITahunAll,
   getAPITutupanLahanAll,
-  getAPIUserGetById,
   postAPIRekalkulasiStatistic,
 } from "@/api/responses";
 
@@ -50,10 +41,15 @@ import {
   SelectedTutupanLahanProps,
 } from "./type";
 import { useRouter } from "next/navigation";
+import { usePermissions } from "@/hook";
 
 export const DashboardStatistikScreen: FC<DashboardScreenProps> = () => {
-  // token
-  const token = Cookies.get(COOKIE_TOKEN);
+  // usePermissions
+  usePermissions({
+    hasPermission: "Pages.Statistik",
+    redirect: "/map-interaktif",
+  });
+
   // variable
   const currentDate = formatDate(new Date(), "dddd, D MMMM YYYY");
   const barHeight = 10;
@@ -254,31 +250,6 @@ export const DashboardStatistikScreen: FC<DashboardScreenProps> = () => {
     rekalkulasi.options && rekalkulasi.options.xaxis
       ? rekalkulasi.options.xaxis.categories.length * barHeight + padding
       : 200;
-
-  // loadData - user
-  const loadUserData = async () => {
-    setIsLoading((value) => ({ ...value, user: true }));
-    try {
-      if (token) {
-        const dec: {
-          sub: string;
-        } = jwtDecode(decryptText(token));
-        await getAPIUserGetById(dec.sub).then(async (res) => {
-          const idRole = res.data.Data.Roles[0].Id;
-          const response = await getAPIRoleGetById(idRole);
-          const hasInteractivePermission =
-            response.data.Data.Permissions.includes("Pages.Statistik");
-          if (!hasInteractivePermission) {
-            router.replace("/map-interaktif");
-          }
-        });
-      }
-    } catch (err) {
-      console.log(err);
-    } finally {
-      setIsLoading((value) => ({ ...value, user: false }));
-    }
-  };
 
   // loadData - dropdown
   const loadProvinsi = async () => {
@@ -513,13 +484,7 @@ export const DashboardStatistikScreen: FC<DashboardScreenProps> = () => {
     }
   }, [isFirstLoad, selectedTahun.rekalkulasi]);
 
-  useLayoutEffect(() => {
-    loadUserData();
-  }, []);
-
-  return isLoading.user ? (
-    <></>
-  ) : (
+  return (
     <div>
       <Navbar />
       <CardScreen

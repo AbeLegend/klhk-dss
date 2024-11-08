@@ -7,7 +7,6 @@ import {
   useRef,
   useState,
   useImperativeHandle,
-  useLayoutEffect,
 } from "react";
 import "@arcgis/core/assets/esri/themes/light/main.css";
 import dynamic from "next/dynamic";
@@ -15,16 +14,9 @@ import { useDispatch } from "react-redux";
 import Search from "@arcgis/core/widgets/Search";
 import { HiOutlineX } from "react-icons/hi";
 import Cookies from "js-cookie";
-import { jwtDecode } from "jwt-decode";
 
 // local
-import {
-  cn,
-  COOKIE_TOKEN,
-  copyToClipboard,
-  decryptText,
-  OptionsType,
-} from "@/lib";
+import { cn, COOKIE_TOKEN, copyToClipboard } from "@/lib";
 import {
   Chip,
   Dropdown,
@@ -32,14 +24,9 @@ import {
   SkeletonLoading,
   SVGIcon,
 } from "@/components/atoms";
-
-// asset
-import LocationCrosshairsSVG from "@/icons/location-crosshairs.svg";
 import { ContainerData, ContainerInformation } from "@/components/molecules";
 import { FloatNavbar } from "@/components/templates";
 import {
-  getAPIRoleGetById,
-  getAPIUserGetById,
   getAPIWebServiceAllByUriTitle,
   getAPIWebServiceAllUriTitle,
   getAPIWebServiceGetPropertiesByGeom,
@@ -55,56 +42,36 @@ import {
   UriTitleMapType,
 } from "@/redux/Map/MapInteraktif";
 import { useAppSelector } from "@/redux/store";
-import { useRouter } from "next/navigation";
+import { usePermissions } from "@/hook";
+
+// asset
+import LocationCrosshairsSVG from "@/icons/location-crosshairs.svg";
 
 const MapComponent = dynamic(() => import("./map"), {
   ssr: false,
 });
 
 export const MapInteraktifScreenHardCoded: FC = () => {
+  // usePermissions
+  usePermissions({
+    hasPermission: "Pages.Map.Interactive",
+    redirect: "/dashboard",
+  });
+
   // token
   const token = Cookies.get(COOKIE_TOKEN);
-
   // useState
   const [searchWidget, setSearchWidget] = useState<Search | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   // useRef
   const sidebarRef = useRef<{ triggerAction: () => void }>(null);
-  // useRouter
-  const router = useRouter();
   // handle
   const handleTriggerSidebarAction = () => {
     sidebarRef.current?.triggerAction();
   };
   // function
-  const loadUserData = async () => {
-    setIsLoading(true);
-    try {
-      if (token) {
-        const dec: {
-          sub: string;
-        } = jwtDecode(decryptText(token));
-        await getAPIUserGetById(dec.sub).then(async (res) => {
-          const idRole = res.data.Data.Roles[0].Id;
-          const response = await getAPIRoleGetById(idRole);
-          const hasInteractivePermission =
-            response.data.Data.Permissions.includes("Pages.Map.Interactive");
-          if (!hasInteractivePermission) {
-            router.replace("/dashboard");
-          }
-        });
-      }
-    } catch (err) {
-      console.log(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  // useLayoutEffect
-  useLayoutEffect(() => {
-    loadUserData();
-  }, [token]);
+
   return (
     <main>
       {!isLoading && (
@@ -720,9 +687,6 @@ const Sidebar = forwardRef((_, ref) => {
       }, 1500);
     }
   }, [isCopied]);
-  useEffect(() => {
-    console.log({ groupTitleText });
-  }, [groupTitleText]);
 
   // Informasi Wilayah: https://geoportal.menlhk.go.id/server/rest/services/SIGAP_Interaktif/Adm_KabKot_Sept2023/MapServer
   // Perencanaan:
