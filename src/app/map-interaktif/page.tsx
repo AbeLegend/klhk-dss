@@ -1,3 +1,4 @@
+"use client";
 // lib
 import { FC } from "react";
 // local

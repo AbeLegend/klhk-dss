@@ -1,3 +1,4 @@
+"use client"
 // lib
 import { useEffect } from "react";
 

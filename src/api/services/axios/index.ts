@@ -1,8 +1,9 @@
-// lib
+// lib/axiosInstance.ts
 import axios, { InternalAxiosRequestConfig } from "axios";
 import Cookies from "js-cookie";
 // local
 import { decryptText } from "@/lib";
+import { useRouter } from "next/navigation"; // Untuk melakukan redirect ke halaman login
 
 // Konfigurasi base URL dan versi API
 const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -46,11 +47,18 @@ fetch.interceptors.response.use(
   (error) => {
     // Menangani error respons
     console.error("Axios response error:", error);
-    if (error.response) {
-      console.error("Status:", error.response.status);
-      console.error("Headers:", error.response.headers);
-      console.error("Data:", error.response.data);
+
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      // Jika token sudah kedaluwarsa, lakukan auto logout
+      Cookies.remove("token");
+      Cookies.remove("token_expired_at");
+      // Cookies.set("token_expired_alert", "true", { maxAge: 5 }); // Set alert cookie
+
+      // Redirect ke halaman login
+      const router = useRouter();
+      router.push("/login");
     }
+
     return Promise.reject(error);
   }
 );
