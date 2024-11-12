@@ -10,12 +10,16 @@ const nextConfig = {
   async rewrites() {
     return [
       {
-        source: "/klhk-dss/:path*",
+        source: "/klhk-geoportal/:path*",
         destination: "https://geoportal.menlhk.go.id/:path*",
       },
       {
-        source: "/klhk-dss/:path*",
+        source: "/klhk-nfms/:path*",
         destination: "https://nfms.menlhk.go.id:8443/:path*",
+      },
+      {
+        source: "/klhk-sigap/:path*",
+        destination: "https://sigap.menlhk.go.id/:path*",
       },
     ];
   },

@@ -216,7 +216,7 @@ export const LoginScreen: FC = () => {
               className={cn([
                 "w-full justify-center py-4 rounded-lg",
                 "hover:bg-accent-surface hover:text-accent",
-                "disabled:bg-gray-300 disabled:text-white disabled:cursor-not-allowed",
+                "disabled:bg-gray-300 disabled:text-white",
                 isLoading && "cursor-wait",
               ])}
               disabled={!form.isValid || token === null || isLoading}

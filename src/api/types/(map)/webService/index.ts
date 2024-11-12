@@ -13,6 +13,7 @@ import { PropertiesModel } from "@/redux/Map/MapInteraktif";
 
 export interface WebServiceGroupModel {
   Id: number,
+  Code: string,
   CreateBy: string,
   CreateDate: string,
   Title: string,
@@ -33,6 +34,7 @@ export interface WebServiceModel {
   Url: string,
   Category: string,
   GroupCategory: string,
+  TimeSeries: number,
   Group: WebServiceGroupModel
 }
 

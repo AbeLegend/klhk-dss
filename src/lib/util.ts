@@ -65,6 +65,20 @@ export const getPathFromUrl = (fullUrl: string): string => {
   return url.pathname;
 }
 
+export const getUrlIdentifier = (url: string): string => {
+  if (url.includes("geoportal.menlhk.go.id")) {
+    return "klhk-geoportal";
+  } else if (url.includes("nfms.menlhk.go.id")) {
+    return "klhk-nfms";
+  } else {
+    return "klhk-sigap";
+  }
+}
+
+export const removeUrlEndingNumber = (url: string): string => {
+  return url.replace(/\/MapServer\/\d+$/, "/MapServer");
+}
+
 export const extractMapNumber = (url: string): string | null => {
   const match = url.match(/MapServer\/(\d+)/);
   return match ? match[1] : null;

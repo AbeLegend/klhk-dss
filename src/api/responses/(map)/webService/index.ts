@@ -37,16 +37,19 @@ export async function getAPIWebServiceAllByUriTitle(UriTitle: string): Promise<A
     }
   }
 }
-export async function getAPIWebServiceGetPropertiesByGeom(data: {
+export async function getAPIWebServiceGetPropertiesByGeom(params: {
   latitude: number,
-  longitude: number
+  longitude: number,
+  codeGroup: string,
+  startYear?: number,
+  endYear?: number,
+  idGroupWebService?: number,
+  idWebServiceReference?: number,
+
 }): Promise<AxiosResponse<WebServiceGetPropertiesByGeomResponse>> {
   try {
     const res = await fetch.get(`/WebService/get_properties_by_geom`, {
-      params: {
-        longitude: data.longitude,
-        latitude: data.latitude
-      }
+      params
     });
     return res;
   } catch (error) {
