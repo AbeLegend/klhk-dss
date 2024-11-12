@@ -1,0 +1,157 @@
+[
+  {
+    "category": "Penutupan Lahan",
+    "properties": [
+      {
+        "Key": "Penutupan Lahan",
+        "Value": "",
+        "Index": 0
+      },
+      {
+        "Key": "Tahun",
+        "Value": "",
+        "Index": 1
+      },
+      {
+        "Key": "Luas",
+        "Value": "",
+        "Index": 2
+      }
+    ],
+    "groupCategor": "Deforestasi & Penutupan Lahan"
+  },
+  {
+    "category": "Deforestasi",
+    "properties": [
+      {
+        "Key": "Tahun",
+        "Value": "",
+        "Index": 0
+      },
+      {
+        "Key": "Luas",
+        "Value": "",
+        "Index": 1
+      },
+      {
+        "Key": "Tahun",
+        "Value": "",
+        "Index": 0
+      },
+      {
+        "Key": "Luas",
+        "Value": "",
+        "Index": 1
+      },
+      {
+        "Key": "Tahun",
+        "Value": "",
+        "Index": 0
+      },
+      {
+        "Key": "Luas",
+        "Value": "",
+        "Index": 1
+      },
+      {
+        "Key": "Tahun",
+        "Value": "",
+        "Index": 0
+      },
+      {
+        "Key": "Luas",
+        "Value": "",
+        "Index": 1
+      },
+      {
+        "Key": "Tahun",
+        "Value": "",
+        "Index": 0
+      },
+      {
+        "Key": "Luas",
+        "Value": "",
+        "Index": 1
+      },
+      {
+        "Key": "Tahun",
+        "Value": "",
+        "Index": 0
+      },
+      {
+        "Key": "Luas",
+        "Value": "",
+        "Index": 1
+      }
+    ],
+    "groupCategor": "Deforestasi & Penutupan Lahan"
+  },
+  {
+    "category": "Kawasan Hutan",
+    "properties": [
+      {
+        "Key": "Fungsi",
+        "Value": "Areal Penggunaan Lain",
+        "Index": 0
+      },
+      {
+        "Key": "Luas",
+        "Value": "12719707",
+        "Index": 1
+      }
+    ],
+    "groupCategor": "Informasi"
+  },
+  {
+    "category": "Informasi Wilayah",
+    "properties": [
+      {
+        "Key": "Provinsi",
+        "Value": "Kalimantan Tengah",
+        "Index": 0
+      },
+      {
+        "Key": "Kab/Kota",
+        "Value": "Kapuas",
+        "Index": 1
+      },
+      {
+        "Key": "Kecamatan",
+        "Value": "",
+        "Index": 2
+      },
+      {
+        "Key": "Kel/Desa",
+        "Value": "",
+        "Index": 3
+      }
+    ],
+    "groupCategor": "Informasi"
+  },
+  {
+    "category": "Kesatuan Pengelolaan Hutan Konservasi (KPHK)",
+    "properties": [
+      {
+        "Key": "Nama Unit",
+        "Value": "",
+        "Index": 0
+      },
+      {
+        "Key": "No Sk",
+        "Value": "",
+        "Index": 1
+      },
+      {
+        "Key": "Tanggal Sk",
+        "Value": "",
+        "Index": 2
+      },
+      {
+        "Key": "Luas",
+        "Value": "",
+        "Index": 3
+      }
+    ],
+    "groupCategor": "Informasi"
+  }
+]

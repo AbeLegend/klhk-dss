@@ -12,7 +12,12 @@ import { useAppSelector } from "@/redux/store";
 import { useDispatch } from "react-redux";
 
 // local
-import { cn, getPathFromUrl } from "@/lib";
+import {
+  cn,
+  getPathFromUrl,
+  getUrlIdentifier,
+  removeUrlEndingNumber,
+} from "@/lib";
 import {
   setIsOpenModalMap,
   setLocation,
@@ -41,12 +46,16 @@ const MapComponent: FC<{
   );
 
   const createLayer = (url: string) => {
+    const prefix = getUrlIdentifier(url);
     const urlFixed = getPathFromUrl(url);
-    if (/\d+$/.test(urlFixed)) {
-      return new FeatureLayer({ url: `/klhk-dss/${urlFixed}` });
-    } else {
-      return new MapImageLayer({ url: `/klhk-dss/${urlFixed}` });
-    }
+    // if (/\d+$/.test(urlFixed)) {
+    //   console.log(extractMapNumber(urlFixed));
+    //   return new FeatureLayer({ url: `/${prefix}/${urlFixed}` });
+    // } else {
+    return new MapImageLayer({
+      url: `/${prefix}/${removeUrlEndingNumber(urlFixed)}`,
+    });
+    // }
   };
 
   // Function to add or remove layers
@@ -94,6 +103,7 @@ const MapComponent: FC<{
     }
   };
 
+  // useEffect
   useEffect(() => {
     if (mapRef.current) {
       const webMap = new WebMap({
@@ -150,7 +160,7 @@ const MapComponent: FC<{
 
   useEffect(() => {
     getUrlFromLayer();
-    // console.log({ layer });
+    console.log({ layer });
   }, [layer]);
 
   return (

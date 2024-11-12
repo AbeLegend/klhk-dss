@@ -3,28 +3,22 @@
 import { useEffect, useRef, useState } from "react";
 import { FiChevronDown, FiChevronUp } from "react-icons/fi";
 // local
-import { cn } from "@/lib";
+import { cn, OptionsType } from "@/lib";
 import { Input, SkeletonLoading } from "@/components/atoms";
 import { useClickOutside } from "@/hook";
-
-interface DropdownItem {
-  label: string;
-  value: string;
-  withCheckbox?: boolean;
-}
 
 interface DropdownProps {
   label: string;
   title: string;
-  items: DropdownItem[];
+  items: OptionsType[];
   multiSelect?: boolean;
   className?: string;
   displayLimit?: number;
   defaultSelected?: string[];
-  onSelect?: (selected: string[]) => void;
+  onSelect?: (selected: { value: string; label: string }[]) => void; // Change onSelect type
   disabled?: boolean;
   loading?: boolean;
-  autoSelectFirstItem?: boolean; // New optional property
+  autoSelectFirstItem?: boolean;
 }
 
 export const Dropdown: React.FC<DropdownProps> = ({
@@ -38,23 +32,24 @@ export const Dropdown: React.FC<DropdownProps> = ({
   onSelect,
   disabled = false,
   loading = false,
-  autoSelectFirstItem = false, // Default to false
+  autoSelectFirstItem = false,
 }) => {
-  // useState
   const [isOpen, setIsOpen] = useState(false);
   const [selectedItems, setSelectedItems] = useState<string[]>(defaultSelected);
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [filteredItems, setFilteredItems] = useState<DropdownItem[]>(items);
+  const [filteredItems, setFilteredItems] = useState<OptionsType[]>(items);
 
-  // useRef
   const dropdownRef = useRef<HTMLDivElement>(null);
-  // useClickOutside
   useClickOutside(dropdownRef, () => setIsOpen(false));
 
   const handleSelect = (value: string) => {
     if (disabled || loading) return;
 
+    const selectedItem = items.find((item) => item.value === value);
+    if (!selectedItem) return;
+
     let newSelectedItems: string[];
+    let newSelectedData: { value: string; label: string }[];
 
     if (multiSelect) {
       if (selectedItems.includes(value)) {
@@ -68,7 +63,16 @@ export const Dropdown: React.FC<DropdownProps> = ({
     }
 
     setSelectedItems(newSelectedItems);
-    onSelect && onSelect(newSelectedItems);
+
+    // Generate an array of objects with both label and value
+    newSelectedData = newSelectedItems.map((val) => {
+      const item = items.find((item) => item.value === val);
+      return item
+        ? { value: item.value, label: item.label }
+        : { value: "", label: "" };
+    });
+
+    onSelect && onSelect(newSelectedData);
   };
 
   useEffect(() => {
@@ -98,7 +102,6 @@ export const Dropdown: React.FC<DropdownProps> = ({
     }
   }, [isOpen]);
 
-  // Auto-select the first item if the option is enabled and no items are selected
   useEffect(() => {
     if (
       items.length > 0 &&
@@ -108,7 +111,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
     ) {
       const firstItem = items[0].value;
       setSelectedItems([firstItem]);
-      onSelect && onSelect([firstItem]);
+      onSelect && onSelect([{ value: firstItem, label: items[0].label }]);
     }
   }, [items, selectedItems, loading, autoSelectFirstItem, onSelect]);
 

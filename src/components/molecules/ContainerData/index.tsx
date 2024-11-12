@@ -3,6 +3,7 @@ import { FC, ReactNode } from "react";
 
 // local
 import { cn } from "@/lib";
+import { SkeletonLoading } from "@/components/atoms";
 
 // type
 type DataType = {
@@ -19,6 +20,7 @@ interface ContainerDataProps {
   titleClassName?: string;
   descriptionClassName?: string;
   descriptionNodeClassName?: string;
+  isLoading?: boolean;
 }
 
 export const ContainerData: FC<ContainerDataProps> = ({
@@ -28,6 +30,7 @@ export const ContainerData: FC<ContainerDataProps> = ({
   titleClassName,
   descriptionClassName,
   descriptionNodeClassName,
+  isLoading,
 }) => {
   return (
     <div
@@ -48,9 +51,13 @@ export const ContainerData: FC<ContainerDataProps> = ({
               {title}
             </p>
             {typeof description === "string" ? (
-              <p className={cn(["text-gray-800", descriptionClassName])}>
-                {description}
-              </p>
+              isLoading ? (
+                <SkeletonLoading className="h-[50%]" width={100} />
+              ) : (
+                <p className={cn(["text-gray-800", descriptionClassName])}>
+                  {description}
+                </p>
+              )
             ) : (
               <div className={cn([descriptionNodeClassName])}>
                 {description}

@@ -2,20 +2,23 @@
   "Data": [
     {
       "WebService": {
-        "Id": 14,
+        "Id": 2,
         "CoverImage": null,
         "CreateBy": "491874ce-92c0-4cfd-83b7-f916df7c219b|Admin",
-        "CreateDate": "2024-09-18T18:07:17.739198",
-        "IdReferenceSimontana": "",
-        "Title": "Informasi Wilayah",
+        "CreateDate": "2024-09-18T18:07:17.737704",
+        "IdReferenceSimontana": "198",
+        "Title": "PL 1990",
+        "Description": null,
         "UpdateBy": null,
         "UpdateDate": null,
-        "UriTitle": "informasi-wilayah",
-        "Url": "https://geoportal.menlhk.go.id/server/rest/services/SIGAP_Interaktif/Adm_KabKot_Sept2023/MapServer",
-        "Category": "Informasi Wilayah",
-        "GroupCategory": "Informasi",
+        "UriTitle": "PENUTUPAN LAHAN",
+        "Url": "https://geoportal.menlhk.go.id/server/rest/services/Time_Series/PL_1990/MapServer",
+        "Category": "Penutupan Lahan",
+        "GroupCategory": "Deforestasi & Penutupan Lahan",
+        "TimeSeries": 1990,
         "Group": {
           "Id": 2,
+          "Code": "02",
           "CreateBy": "491874ce-92c0-4cfd-83b7-f916df7c219b|Admin",
           "CreateDate": "2024-10-08T07:49:53.457072",
           "Title": "Laju Perubahan",
@@ -25,30 +28,253 @@
       },
       "Properties": [
         {
-          "OBJECTID": "282",
-          "NAMOBJ": "Katingan",
-          "FCODE": "",
-          "REMARK": " ",
-          "METADATA": "TASWIL5000020221227KABKOTA",
-          "SRS_ID": "4326",
-          "KDBBPS": "",
-          "KDCBPS": "",
-          "KDCPUM": "",
-          "KDEBPS": "",
-          "KDEPUM": "",
-          "KDPBPS": "",
-          "KDPKAB": "62.06",
-          "KDPPUM": "62",
-          "LUASWH": "",
-          "TIPADM": "",
-          "WADMKC": "",
-          "WADMKD": "",
-          "WADMKK": "Katingan",
-          "WADMPR": "Kalimantan Tengah",
-          "WIADKC": "",
-          "WIADKK": "",
-          "WIADPR": "",
-          "WIADKD": ""
+          "Key": "Penutupan Lahan",
+          "Value": "",
+          "Index": 0
+        },
+        {
+          "Key": "Tahun",
+          "Value": "",
+          "Index": 1
+        },
+        {
+          "Key": "Luas",
+          "Value": "",
+          "Index": 2
+        }
+      ]
+    },
+    {
+      "WebService": {
+        "Id": 3,
+        "CoverImage": null,
+        "CreateBy": "491874ce-92c0-4cfd-83b7-f916df7c219b|Admin",
+        "CreateDate": "2024-09-18T18:07:17.739198",
+        "IdReferenceSimontana": "197",
+        "Title": "Deforestasi 2016-2017",
+        "Description": null,
+        "UpdateBy": null,
+        "UpdateDate": null,
+        "UriTitle": "DEFORESTASI",
+        "Url": "https://geoportal.menlhk.go.id/server/rest/services/Time_Series/DEF_2016_2017/MapServer",
+        "Category": "Deforestasi",
+        "GroupCategory": "Deforestasi & Penutupan Lahan",
+        "TimeSeries": 2016,
+        "Group": {
+          "Id": 2,
+          "Code": "02",
+          "CreateBy": "491874ce-92c0-4cfd-83b7-f916df7c219b|Admin",
+          "CreateDate": "2024-10-08T07:49:53.457072",
+          "Title": "Laju Perubahan",
+          "UpdateBy": null,
+          "UpdateDate": null
+        }
+      },
+      "Properties": [
+        {
+          "Key": "Tahun",
+          "Value": "",
+          "Index": 0
+        },
+        {
+          "Key": "Luas",
+          "Value": "",
+          "Index": 1
+        }
+      ]
+    },
+    {
+      "WebService": {
+        "Id": 7,
+        "CoverImage": null,
+        "CreateBy": "491874ce-92c0-4cfd-83b7-f916df7c219b|Admin",
+        "CreateDate": "2024-09-18T18:07:17.739477",
+        "IdReferenceSimontana": "182",
+        "Title": "Deforestasi 2017-2018",
+        "Description": null,
+        "UpdateBy": null,
+        "UpdateDate": null,
+        "UriTitle": "DEFORESTASI",
+        "Url": "https://geoportal.menlhk.go.id/server/rest/services/Time_Series/DEF_2017_2018/MapServer",
+        "Category": "Deforestasi",
+        "GroupCategory": "Deforestasi & Penutupan Lahan",
+        "TimeSeries": 2017,
+        "Group": {
+          "Id": 2,
+          "Code": "02",
+          "CreateBy": "491874ce-92c0-4cfd-83b7-f916df7c219b|Admin",
+          "CreateDate": "2024-10-08T07:49:53.457072",
+          "Title": "Laju Perubahan",
+          "UpdateBy": null,
+          "UpdateDate": null
+        }
+      },
+      "Properties": [
+        {
+          "Key": "Tahun",
+          "Value": "",
+          "Index": 0
+        },
+        {
+          "Key": "Luas",
+          "Value": "",
+          "Index": 1
+        }
+      ]
+    },
+    {
+      "WebService": {
+        "Id": 8,
+        "CoverImage": null,
+        "CreateBy": "491874ce-92c0-4cfd-83b7-f916df7c219b|Admin",
+        "CreateDate": "2024-09-18T18:07:17.739516",
+        "IdReferenceSimontana": "79",
+        "Title": "Deforestasi 2018-2019",
+        "Description": null,
+        "UpdateBy": null,
+        "UpdateDate": null,
+        "UriTitle": "DEFORESTASI",
+        "Url": "https://geoportal.menlhk.go.id/server/rest/services/Time_Series/DEF_2018_2019/MapServer",
+        "Category": "Deforestasi",
+        "GroupCategory": "Deforestasi & Penutupan Lahan",
+        "TimeSeries": 2018,
+        "Group": {
+          "Id": 2,
+          "Code": "02",
+          "CreateBy": "491874ce-92c0-4cfd-83b7-f916df7c219b|Admin",
+          "CreateDate": "2024-10-08T07:49:53.457072",
+          "Title": "Laju Perubahan",
+          "UpdateBy": null,
+          "UpdateDate": null
+        }
+      },
+      "Properties": [
+        {
+          "Key": "Tahun",
+          "Value": "",
+          "Index": 0
+        },
+        {
+          "Key": "Luas",
+          "Value": "",
+          "Index": 1
+        }
+      ]
+    },
+    {
+      "WebService": {
+        "Id": 9,
+        "CoverImage": null,
+        "CreateBy": "491874ce-92c0-4cfd-83b7-f916df7c219b|Admin",
+        "CreateDate": "2024-09-18T18:07:17.739557",
+        "IdReferenceSimontana": "106",
+        "Title": "Deforestasi 2019-2020",
+        "Description": null,
+        "UpdateBy": null,
+        "UpdateDate": null,
+        "UriTitle": "DEFORESTASI",
+        "Url": "https://geoportal.menlhk.go.id/server/rest/services/Time_Series/DEF_2019_2020/MapServer",
+        "Category": "Deforestasi",
+        "GroupCategory": "Deforestasi & Penutupan Lahan",
+        "TimeSeries": 2019,
+        "Group": {
+          "Id": 2,
+          "Code": "02",
+          "CreateBy": "491874ce-92c0-4cfd-83b7-f916df7c219b|Admin",
+          "CreateDate": "2024-10-08T07:49:53.457072",
+          "Title": "Laju Perubahan",
+          "UpdateBy": null,
+          "UpdateDate": null
+        }
+      },
+      "Properties": [
+        {
+          "Key": "Tahun",
+          "Value": "",
+          "Index": 0
+        },
+        {
+          "Key": "Luas",
+          "Value": "",
+          "Index": 1
+        }
+      ]
+    },
+    {
+      "WebService": {
+        "Id": 10,
+        "CoverImage": null,
+        "CreateBy": "491874ce-92c0-4cfd-83b7-f916df7c219b|Admin",
+        "CreateDate": "2024-09-18T18:07:17.739606",
+        "IdReferenceSimontana": "180",
+        "Title": "Deforestasi 2020 2021",
+        "Description": null,
+        "UpdateBy": null,
+        "UpdateDate": null,
+        "UriTitle": "DEFORESTASI",
+        "Url": "https://geoportal.menlhk.go.id/server/rest/services/Time_Series/DEF_2020_2021/MapServer",
+        "Category": "Deforestasi",
+        "GroupCategory": "Deforestasi & Penutupan Lahan",
+        "TimeSeries": 2020,
+        "Group": {
+          "Id": 2,
+          "Code": "02",
+          "CreateBy": "491874ce-92c0-4cfd-83b7-f916df7c219b|Admin",
+          "CreateDate": "2024-10-08T07:49:53.457072",
+          "Title": "Laju Perubahan",
+          "UpdateBy": null,
+          "UpdateDate": null
+        }
+      },
+      "Properties": [
+        {
+          "Key": "Tahun",
+          "Value": "",
+          "Index": 0
+        },
+        {
+          "Key": "Luas",
+          "Value": "",
+          "Index": 1
+        }
+      ]
+    },
+    {
+      "WebService": {
+        "Id": 11,
+        "CoverImage": null,
+        "CreateBy": "491874ce-92c0-4cfd-83b7-f916df7c219b|Admin",
+        "CreateDate": "2024-09-18T18:07:17.739649",
+        "IdReferenceSimontana": "178",
+        "Title": "Deforestasi 2021-2022",
+        "Description": null,
+        "UpdateBy": null,
+        "UpdateDate": null,
+        "UriTitle": "DEFORESTASI",
+        "Url": "https://geoportal.menlhk.go.id/server/rest/services/Time_Series/DEF_2021_2022/MapServer",
+        "Category": "Deforestasi",
+        "GroupCategory": "Deforestasi & Penutupan Lahan",
+        "TimeSeries": 2021,
+        "Group": {
+          "Id": 2,
+          "Code": "02",
+          "CreateBy": "491874ce-92c0-4cfd-83b7-f916df7c219b|Admin",
+          "CreateDate": "2024-10-08T07:49:53.457072",
+          "Title": "Laju Perubahan",
+          "UpdateBy": null,
+          "UpdateDate": null
+        }
+      },
+      "Properties": [
+        {
+          "Key": "Tahun",
+          "Value": "",
+          "Index": 0
+        },
+        {
+          "Key": "Luas",
+          "Value": "",
+          "Index": 1
         }
       ]
     },
@@ -60,36 +286,83 @@
         "CreateDate": "2024-09-18T18:07:17.739721",
         "IdReferenceSimontana": "103",
         "Title": "Kawasan Hutan",
+        "Description": null,
         "UpdateBy": null,
         "UpdateDate": null,
-        "UriTitle": "kawasan-hutan",
+        "UriTitle": "KAWASAN HUTAN",
         "Url": "https://geoportal.menlhk.go.id/server/rest/services/SIGAP_Interaktif/Kawasan_Hutan/MapServer",
-        "Category": "Lainnya",
-        "GroupCategory": "Lainnya",
+        "Category": "Kawasan Hutan",
+        "GroupCategory": "Informasi",
+        "TimeSeries": 2024,
         "Group": {
-          "Id": 5,
+          "Id": 2,
+          "Code": "02",
           "CreateBy": "491874ce-92c0-4cfd-83b7-f916df7c219b|Admin",
-          "CreateDate": "2024-10-08T07:50:15.246594",
-          "Title": "Lainnya",
+          "CreateDate": "2024-10-08T07:49:53.457072",
+          "Title": "Laju Perubahan",
           "UpdateBy": null,
           "UpdateDate": null
         }
       },
       "Properties": [
         {
-          "OBJECTID": "3443",
-          "NO_REG": "0",
-          "KODE_PROV": "62",
-          "FUNGSIKWS": "100240",
-          "NOSKKWS": "529/Menhut-II/2012",
-          "TGLSKKWS": "9/25/2012 12:00:00 AM",
-          "LSKKWS": "12719707",
-          "NAMOBJ": "Bukit Baka - Bukit Raya",
-          "FCODE": "-",
-          "LCODE": " A3018AR",
-          "METADATA": "KWSHUTAN_AR_250K",
-          "SRS_ID": "EPSG 4326",
-          "REMARK": "Peta Perkembangan Pengukuhan Kawasan Hutan Tahun 2020"
+          "Key": "Fungsi",
+          "Value": "Hutan Produksi yang dapat dikonversi",
+          "Index": 0
+        },
+        {
+          "Key": "Luas",
+          "Value": "12719707",
+          "Index": 1
+        }
+      ]
+    },
+    {
+      "WebService": {
+        "Id": 14,
+        "CoverImage": null,
+        "CreateBy": "491874ce-92c0-4cfd-83b7-f916df7c219b|Admin",
+        "CreateDate": "2024-09-18T18:07:17.739198",
+        "IdReferenceSimontana": "",
+        "Title": "Informasi Wilayah",
+        "Description": null,
+        "UpdateBy": null,
+        "UpdateDate": null,
+        "UriTitle": "INFORMASI WILAYAH",
+        "Url": "https://geoportal.menlhk.go.id/server/rest/services/SIGAP_Interaktif/Adm_KabKot_Sept2023/MapServer",
+        "Category": "Informasi Wilayah",
+        "GroupCategory": "Informasi",
+        "TimeSeries": 2023,
+        "Group": {
+          "Id": 2,
+          "Code": "02",
+          "CreateBy": "491874ce-92c0-4cfd-83b7-f916df7c219b|Admin",
+          "CreateDate": "2024-10-08T07:49:53.457072",
+          "Title": "Laju Perubahan",
+          "UpdateBy": null,
+          "UpdateDate": null
+        }
+      },
+      "Properties": [
+        {
+          "Key": "Provinsi",
+          "Value": "Kalimantan Tengah",
+          "Index": 0
+        },
+        {
+          "Key": "Kab/Kota",
+          "Value": "Barito Utara",
+          "Index": 1
+        },
+        {
+          "Key": "Kecamatan",
+          "Value": "",
+          "Index": 2
+        },
+        {
+          "Key": "Kel/Desa",
+          "Value": "",
+          "Index": 3
         }
       ]
     },
@@ -101,14 +374,17 @@
         "CreateDate": "2024-09-18T18:07:17.739198",
         "IdReferenceSimontana": "",
         "Title": "Kesatuan Pengelolaan Hutan Konservasi (KPHK)",
+        "Description": null,
         "UpdateBy": null,
         "UpdateDate": null,
-        "UriTitle": "kphk",
+        "UriTitle": "KPHK",
         "Url": "https://geoportal.menlhk.go.id/server/rest/services/dgcfrhmh/KPH_AR_250K/MapServer/2",
         "Category": "Kesatuan Pengelolaan Hutan Konservasi (KPHK)",
         "GroupCategory": "Informasi",
+        "TimeSeries": 2023,
         "Group": {
           "Id": 2,
+          "Code": "02",
           "CreateBy": "491874ce-92c0-4cfd-83b7-f916df7c219b|Admin",
           "CreateDate": "2024-10-08T07:49:53.457072",
           "Title": "Laju Perubahan",
@@ -118,16 +394,24 @@
       },
       "Properties": [
         {
-          "OBJECTID": "57797",
-          "FUNGSIKWS": "TN",
-          "KODEPROV": "61",
-          "NOSK": "SK.750/Menhut-II/2011",
-          "TGLSK": "12/30/2011 12:00:00 AM",
-          "LSSK": "181090",
-          "ID_KPH": "0",
-          "NAMA_KPH": "TN Bukit Raya Bukit Baka",
-          "REMARK": "Sumber Data Kawasan Hutan per September 2023",
-          "LUAS": ""
+          "Key": "Nama Unit",
+          "Value": "",
+          "Index": 0
+        },
+        {
+          "Key": "No Sk",
+          "Value": "",
+          "Index": 1
+        },
+        {
+          "Key": "Tanggal Sk",
+          "Value": "",
+          "Index": 2
+        },
+        {
+          "Key": "Luas",
+          "Value": "",
+          "Index": 3
         }
       ]
     }

@@ -501,7 +501,7 @@ export const DashboardStatistikScreen: FC<DashboardScreenProps> = () => {
                 title="Pilih Provinsi"
                 items={provinceData}
                 onSelect={(selected) =>
-                  handleChangeProvince(selected[0], "rekalkulasi")
+                  handleChangeProvince(selected[0].value, "rekalkulasi")
                 }
               />
             </div>
@@ -512,7 +512,7 @@ export const DashboardStatistikScreen: FC<DashboardScreenProps> = () => {
                 items={tahunData}
                 autoSelectFirstItem={true}
                 onSelect={(selected) =>
-                  handleChangeTahun(selected[0], "rekalkulasi")
+                  handleChangeTahun(selected[0].value, "rekalkulasi")
                 }
               />
             </div>
@@ -524,7 +524,7 @@ export const DashboardStatistikScreen: FC<DashboardScreenProps> = () => {
                 title="Pilih Kabupaten / Kota"
                 items={cityData.rekalkulasi}
                 onSelect={(selected) =>
-                  handleChangeCity(selected[0], "rekalkulasi")
+                  handleChangeCity(selected[0].value, "rekalkulasi")
                 }
               />
             </div>
@@ -534,7 +534,7 @@ export const DashboardStatistikScreen: FC<DashboardScreenProps> = () => {
                 title="Pilih Penutupan Lahan"
                 items={penutupanLahanData}
                 onSelect={(selected) =>
-                  handleChangeTutupanLahan(selected[0], "rekalkulasi")
+                  handleChangeTutupanLahan(selected[0].value, "rekalkulasi")
                 }
               />
             </div>
