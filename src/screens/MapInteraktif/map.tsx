@@ -6,6 +6,9 @@ import WebMap from "@arcgis/core/WebMap";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import MapImageLayer from "@arcgis/core/layers/MapImageLayer";
 import Search from "@arcgis/core/widgets/Search";
+import Graphic from "@arcgis/core/Graphic";
+import Point from "@arcgis/core/geometry/Point";
+import SimpleMarkerSymbol from "@arcgis/core/symbols/SimpleMarkerSymbol";
 
 import "@arcgis/core/assets/esri/themes/light/main.css";
 import { useAppSelector } from "@/redux/store";
@@ -45,23 +48,43 @@ const MapComponent: FC<{
     (state) => state.mapInteraktif
   );
 
+  const handleMapClick = async (lat: number, long: number, map: MapView) => {
+    map.graphics.removeAll();
+    const point = new Point({
+      longitude: long,
+      latitude: lat,
+    });
+    const pointGraphic = new Graphic({
+      geometry: point,
+      symbol: new SimpleMarkerSymbol({
+        color: "#F1B113",
+        size: "10px",
+        outline: {
+          color: "#188218",
+          width: 1,
+        },
+      }),
+    });
+    map.graphics.add(pointGraphic);
+    // Update location in Redux
+    await dispatch(setLocation({ latitude: lat, longitude: long }));
+    // Open modal in Redux
+    dispatch(setIsOpenModalMap(true));
+    // Trigger Sidebar action after location update
+    onTriggerSidebar();
+  };
+
   const createLayer = (url: string) => {
     const prefix = getUrlIdentifier(url);
     const urlFixed = getPathFromUrl(url);
-    // if (/\d+$/.test(urlFixed)) {
-    //   console.log(extractMapNumber(urlFixed));
-    //   return new FeatureLayer({ url: `/${prefix}/${urlFixed}` });
-    // } else {
     return new MapImageLayer({
       url: `/${prefix}/${removeUrlEndingNumber(urlFixed)}`,
     });
-    // }
   };
 
   // Function to add or remove layers
   const getUrlFromLayer = () => {
     if (layer.length > 0 && view) {
-      // Separate active and inactive layers
       const activeLayers = layer.filter(
         (item) => item.isActive && !item.isUsed
       );
@@ -69,13 +92,11 @@ const MapComponent: FC<{
         (item) => !item.isActive && !item.isUsed
       );
 
-      // Add active layers to the map
       activeLayers.forEach((item) => {
         item.data?.forEach((childItem) => {
-          const childId = childItem.WebService.Id; // Akses Id melalui WebService
-          const childUrl = childItem.WebService.Url; // Akses Url melalui WebService
+          const childId = childItem.WebService.Id;
+          const childUrl = childItem.WebService.Url;
 
-          // Only add if the layer is not already in the map
           if (!layerMap.has(childId)) {
             const newLayer = createLayer(childUrl);
             view.map.add(newLayer);
@@ -84,10 +105,9 @@ const MapComponent: FC<{
         });
       });
 
-      // Remove inactive layers from the map
       inactiveLayers.forEach((item) => {
         item.data?.forEach((childItem) => {
-          const childId = childItem.WebService.Id; // Akses Id melalui WebService
+          const childId = childItem.WebService.Id;
           const existingLayer = layerMap.get(childId);
 
           if (existingLayer) {
@@ -103,7 +123,6 @@ const MapComponent: FC<{
     }
   };
 
-  // useEffect
   useEffect(() => {
     if (mapRef.current) {
       const webMap = new WebMap({
@@ -123,20 +142,16 @@ const MapComponent: FC<{
       setSearchWidget(search);
       onSearchWidgetReady?.(search);
 
-      // Remove default zoom controls
       mapView.ui.remove("zoom");
-      mapView.on("click", (event) => {
+      mapView.on("click", async (event) => {
         const lat = event.mapPoint.latitude;
         const long = event.mapPoint.longitude;
-        dispatch(setLocation({ latitude: lat, longitude: long }));
-        dispatch(setIsOpenModalMap(true));
-        onTriggerSidebar();
+
+        handleMapClick(lat, long, mapView);
       });
 
-      // Handle the event when the map is loaded
       mapView
         .when(() => {
-          // console.log("Map loaded successfully!");
           setIsMapLoaded(true);
           setView(mapView);
         })
@@ -144,7 +159,6 @@ const MapComponent: FC<{
           console.error("Error loading the map:", error);
         });
 
-      // Cleanup when the component unmounts
       return () => {
         if (mapView) {
           mapView.destroy();
@@ -152,6 +166,7 @@ const MapComponent: FC<{
       };
     }
   }, []);
+
   useEffect(() => {
     if (searchWidget && searchLocation) {
       searchWidget.search(searchLocation);

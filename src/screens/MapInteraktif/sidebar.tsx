@@ -75,10 +75,17 @@ interface GroupCategoryProps {
   value: string;
   isActive: boolean;
 }
+
+interface WebServicePropertiesModel {
+  title: string;
+  timeSeries: number;
+  property: PropertiesModel[];
+}
 interface AllDataDataProps {
   category: string;
   groupCategory: string;
   properties: PropertiesModel[];
+  webServiceProperties: WebServicePropertiesModel[];
 }
 
 interface AllDataProps {
@@ -218,9 +225,9 @@ export const Sidebar = forwardRef((_, ref) => {
     } catch (err) {
       console.log(err);
     } finally {
-      if (location.latitude && location.longitude) {
-        loadWebServiceGetPropertiesByGeom();
-      }
+      // if (location.latitude && location.longitude) {
+      //   loadWebServiceGetPropertiesByGeom();
+      // }
       setIsLoading((value) => ({ ...value, byAllUriTitle: false }));
     }
   };
@@ -230,11 +237,22 @@ export const Sidebar = forwardRef((_, ref) => {
       const { data, status } = await getAPIWebServiceAll();
       if (status === 200) {
         const groupData = getDistinctGroups(data.Data);
-        if (groupData) {
+        const customOrder = ["Deteksi", "Laju", "Alur", "Evaluasi"];
+        const orderData = groupData.sort((a, b) => {
+          const indexA = customOrder.findIndex((order) =>
+            a.Title.includes(order)
+          );
+          const indexB = customOrder.findIndex((order) =>
+            b.Title.includes(order)
+          );
+          return indexA - indexB;
+        });
+        console.log({ orderData });
+        if (orderData) {
           setGroupTab((value) => ({
             ...value,
-            selected: groupData[3],
-            data: groupData,
+            selected: orderData[1],
+            data: orderData,
           }));
         }
       }
@@ -267,7 +285,13 @@ export const Sidebar = forwardRef((_, ref) => {
             const resData = data.Data;
 
             const uniqueGroupCategories = Array.from(
-              new Set(resData.map((item) => item.WebService.GroupCategory))
+              new Set(
+                resData
+                  .filter(
+                    (filterItem) => filterItem.WebService.GroupCategory !== null
+                  )
+                  .map((item) => item.WebService.GroupCategory)
+              )
             )
               .sort((a, b) => a.localeCompare(b))
               .map((category, index) => {
@@ -278,43 +302,87 @@ export const Sidebar = forwardRef((_, ref) => {
               });
 
             // Definisikan tipe data untuk item di groupedData
-            interface GroupedDataItem {
-              category: string;
-              properties: PropertiesModel[];
-              groupCategory: string;
-            }
 
             // Inisialisasi initialGroupedData dengan tipe GroupedDataItem[]
-            const initialGroupedData: GroupedDataItem[] = resData.map(
-              (item) => ({
-                category: item.WebService.Category,
-                properties: item.Properties,
-                groupCategory: item.WebService.GroupCategory,
-              })
+
+            const initialGroupedData: AllDataDataProps[] = resData.map(
+              (item) => {
+                return {
+                  category: item.WebService.Category,
+                  properties: item.Properties,
+                  groupCategory: item.WebService.GroupCategory,
+                  webServiceProperties: [
+                    {
+                      title: item.WebService.Title,
+                      property: item.Properties,
+                      timeSeries: item.WebService.TimeSeries,
+                    },
+                  ],
+                };
+              }
             );
 
             // Definisikan groupedData dengan tipe GroupedDataItem[]
-            const groupedData: GroupedDataItem[] = initialGroupedData.reduce(
+            const groupedData: AllDataDataProps[] = initialGroupedData.reduce(
               (acc, currentItem) => {
-                const existingCategory = acc.find(
-                  (entry) => entry.category === currentItem.category
+                // Cari atau buat grup berdasarkan `groupCategory`
+                let groupCategoryGroup = acc.find(
+                  (entry) => entry.groupCategory === currentItem.groupCategory
                 );
 
-                if (existingCategory) {
-                  existingCategory.properties.push(...currentItem.properties);
+                if (!groupCategoryGroup) {
+                  groupCategoryGroup = {
+                    groupCategory: currentItem.groupCategory,
+                    category: currentItem.category,
+                    properties: [],
+                    webServiceProperties: [],
+                  };
+                  acc.push(groupCategoryGroup);
+                }
+
+                // Periksa apakah grup kategori ada dalam `groupCategory`
+                const categoryGroup = acc.find(
+                  (entry) =>
+                    entry.groupCategory === currentItem.groupCategory &&
+                    entry.category === currentItem.category
+                );
+
+                if (categoryGroup) {
+                  // Jika grup kategori ada, gabungkan properties dan webServiceProperties
+                  categoryGroup.properties.push(...currentItem.properties);
+                  categoryGroup.webServiceProperties.push({
+                    title: currentItem.webServiceProperties[0].title,
+                    property: currentItem.webServiceProperties[0].property,
+                    timeSeries: currentItem.webServiceProperties[0].timeSeries,
+                  });
                 } else {
+                  // Jika grup kategori tidak ada, tambahkan sebagai grup baru
                   acc.push({
+                    groupCategory: currentItem.groupCategory,
                     category: currentItem.category,
                     properties: [...currentItem.properties],
-                    groupCategory: currentItem.groupCategory,
+                    webServiceProperties: [
+                      {
+                        title: currentItem.webServiceProperties[0].title,
+                        property: currentItem.webServiceProperties[0].property,
+                        timeSeries:
+                          currentItem.webServiceProperties[0].timeSeries,
+                      },
+                    ],
                   });
                 }
 
                 return acc;
               },
-              [] as GroupedDataItem[]
+              [] as AllDataDataProps[]
             );
+
             setAllData({
+              data: groupedData,
+              groupCategory: uniqueGroupCategories,
+            });
+
+            console.log({
               data: groupedData,
               groupCategory: uniqueGroupCategories,
             });
@@ -434,6 +502,12 @@ export const Sidebar = forwardRef((_, ref) => {
       groupTab.selected.Title !== "Alur & Status Tahapan"
     ) {
       resetAlurStatusTahapanDropdown();
+    }
+  }, [groupTab?.selected]);
+  useEffect(() => {
+    if (groupTab && groupTab.selected) {
+      setAllData(null);
+      loadWebServiceGetPropertiesByGeom();
     }
   }, [groupTab?.selected]);
 
@@ -557,9 +631,11 @@ export const Sidebar = forwardRef((_, ref) => {
                           ? activeClassName
                           : inActiveClassName,
                         "border border-gray-300",
+                        isLoading.getPropertiesByGeom &&
+                          "opacity-80 cursor-default",
                       ])}
                       onClick={() => {
-                        if (item) {
+                        if (item && !isLoading.getPropertiesByGeom) {
                           setGroupTab((value) => ({
                             ...value,
                             selected: item,
@@ -574,6 +650,7 @@ export const Sidebar = forwardRef((_, ref) => {
                             ? "text-white"
                             : "text-gray-700",
                           "font-medium",
+                          isLoading.getPropertiesByGeom && " opacity-80",
                         ])}
                       >
                         {item.Title}
@@ -660,7 +737,7 @@ export const Sidebar = forwardRef((_, ref) => {
                                   containerClassName={cn([
                                     "grid-cols-2",
                                     ThreeGrid && "grid-cols-3",
-                                    FourGrid && "grid-cols-4",
+                                    // FourGrid && "grid-cols-4",
                                     item.category === "Deforestasi" &&
                                       "grid-cols-2",
                                   ])}
@@ -757,8 +834,172 @@ export const Sidebar = forwardRef((_, ref) => {
                 //   })
                 // )
                 null}
-                {/* TODO: Alur & Status Tahapan  */}
 
+                {/* TODO: Deteksi Perencanaan & Pengelolaan  */}
+                {groupTab.selected.Title ===
+                "Deteksi Perencanaan & Pengelolaan" ? (
+                  isLoading.getPropertiesByGeom && allData === null ? (
+                    <div className="flex justify-center">
+                      <AiOutlineLoading3Quarters className="animate-spin text-4xl text-gray-400 text-center" />
+                    </div>
+                  ) : (
+                    <div>
+                      {allData &&
+                        allData.data
+                          .filter(
+                            (filterItem) => filterItem.groupCategory === null
+                          )
+                          .map((i, indexKey) => {
+                            return (
+                              <div key={indexKey}>
+                                <p className="text-body-2 text-gray-900 font-medium mb-6">
+                                  {i.category}
+                                </p>
+                                <div>
+                                  {i.webServiceProperties.map((item, index) => {
+                                    return (
+                                      <ContainerInformation
+                                        key={index}
+                                        title={item.title}
+                                        secondTitle={`Tahun ${item.timeSeries}`}
+                                        containerClassName={cn([
+                                          index !== 0 && "mt-4",
+                                        ])}
+                                      >
+                                        <ContainerData
+                                          isLoading={
+                                            isLoading.getPropertiesByGeom
+                                          }
+                                          containerClassName={cn([
+                                            "grid-cols-2",
+                                          ])}
+                                          data={item.property.map(
+                                            (property, indexProperty) => {
+                                              return {
+                                                title: property.Key,
+                                                description:
+                                                  property.Value === ""
+                                                    ? "-"
+                                                    : property.Value,
+                                              };
+                                            }
+                                          )}
+                                        />
+                                      </ContainerInformation>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            );
+                          })}
+                      <div className="rounded-lg flex w-full mb-6 mt-6">
+                        {allData &&
+                          allData.groupCategory
+                            .sort((a, b) => (a.value > b.value ? -1 : 1))
+                            .map((item, index) => {
+                              return (
+                                <div
+                                  key={index}
+                                  className={cn([
+                                    "w-full text-center",
+                                    index === 0 && "rounded-l-lg",
+                                    index + 1 ===
+                                      allData.groupCategory.length &&
+                                      "rounded-r-lg",
+                                    "bg-white shadow-small border cursor-pointer",
+                                    item.isActive &&
+                                      "bg-primary text-white cursor-default",
+                                  ])}
+                                  onClick={() => {
+                                    handleTabClick(index);
+                                  }}
+                                >
+                                  <p
+                                    className={cn([
+                                      "py-[9px] px-4 text-body-3",
+                                    ])}
+                                  >
+                                    {item.value}
+                                  </p>
+                                </div>
+                              );
+                            })}
+                      </div>
+                      {allData &&
+                        allData.data
+                          .filter((item) => {
+                            const activeGroupCategory =
+                              allData.groupCategory.find(
+                                (category) => category.isActive
+                              );
+                            return (
+                              activeGroupCategory &&
+                              item.groupCategory === activeGroupCategory.value
+                            );
+                          })
+                          .map((item, index) => {
+                            const TwoGrid = item.properties.length === 2;
+                            const ThreeGrid = item.properties.length === 3;
+                            const FourGrid = item.properties.length > 3;
+
+                            return (
+                              <ContainerInformation
+                                containerClassName={cn([index !== 0 && "mt-4"])}
+                                title={item.category}
+                                key={index}
+                              >
+                                <ContainerData
+                                  isLoading={isLoading.getPropertiesByGeom}
+                                  containerClassName={cn([
+                                    "grid-cols-2",
+                                    ThreeGrid && "grid-cols-3",
+                                    // FourGrid && "grid-cols-4",
+                                    item.category === "Deforestasi" &&
+                                      "grid-cols-2",
+                                  ])}
+                                  //
+                                  // descriptionClassName={cn([
+                                  //   TwoGrid && "justify-self-end",
+                                  // ])}
+                                  // titleClassName={cn(["justify-self-end"])}
+                                  //
+                                  data={item.properties.map(
+                                    (property, indexProperty) => {
+                                      if (item.category === "Deforestasi") {
+                                        return {
+                                          dataClassName: `${cn([
+                                            item.category === "Deforestasi" &&
+                                              "col-span-1",
+                                          ])}`,
+                                          title:
+                                            indexProperty === 0 ||
+                                            indexProperty === 1
+                                              ? property.Key
+                                              : "",
+                                          description:
+                                            property.Value === ""
+                                              ? "-"
+                                              : property.Value,
+                                        };
+                                      } else {
+                                        return {
+                                          title: property.Key,
+                                          description:
+                                            property.Value === ""
+                                              ? "-"
+                                              : property.Value,
+                                        };
+                                      }
+                                    }
+                                  )}
+                                />
+                              </ContainerInformation>
+                            );
+                          })}
+                    </div>
+                  )
+                ) : null}
+                {/* TODO: Alur & Status Tahapan  */}
                 {groupTab.selected.Title === "Alur & Status Tahapan" ? (
                   <>
                     {tahunData.length > 0 && (
@@ -1303,9 +1544,7 @@ export const Sidebar = forwardRef((_, ref) => {
                         </div>
                       )}
                   </>
-                ) : (
-                  <></>
-                )}
+                ) : null}
               </>
             )}
             {/* TODO: Alur & Status Tahapan  */}
