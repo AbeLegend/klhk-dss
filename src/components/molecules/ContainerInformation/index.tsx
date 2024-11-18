@@ -7,7 +7,10 @@ import { cn } from "@/lib";
 // interface
 interface ContainerInformationProps {
   title: string;
+  secondTitle?: string;
   titleClassName?: string;
+  titleContainerClassName?: string;
+  secondTitleClassName?: string;
   children: ReactNode;
   childrenClassName?: string;
   containerClassName?: string;
@@ -15,21 +18,41 @@ interface ContainerInformationProps {
 
 export const ContainerInformation: FC<ContainerInformationProps> = ({
   title,
+  secondTitle,
   titleClassName,
+  titleContainerClassName,
+  secondTitleClassName,
   children,
   childrenClassName,
   containerClassName,
 }) => {
   return (
     <div className={cn([containerClassName])}>
-      <p
+      <div
         className={cn([
-          "text-body-3 text-gray-900 font-medium mb-6",
-          titleClassName,
+          secondTitle && "flex justify-between items-center",
+          titleContainerClassName,
         ])}
       >
-        {title}
-      </p>
+        <p
+          className={cn([
+            "text-body-3 text-gray-900 font-medium mb-6",
+            titleClassName,
+          ])}
+        >
+          {title}
+        </p>
+        {secondTitle && (
+          <p
+            className={cn([
+              "text-body-3 text-gray-900 font-medium mb-6",
+              secondTitleClassName,
+            ])}
+          >
+            {secondTitle}
+          </p>
+        )}
+      </div>
       <div className={cn([childrenClassName])}>{children}</div>
     </div>
   );

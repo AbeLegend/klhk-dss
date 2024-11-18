@@ -28,7 +28,7 @@ import {
   SVGIcon,
   TimelineItem,
 } from "@/components/atoms";
-import { cn, copyToClipboard, OptionsType } from "@/lib";
+import { cn, copyToClipboard, formatNumber, OptionsType } from "@/lib";
 import {
   DataWebserviceByGeom,
   PropertiesModel,
@@ -75,10 +75,17 @@ interface GroupCategoryProps {
   value: string;
   isActive: boolean;
 }
+
+interface WebServicePropertiesModel {
+  title: string;
+  timeSeries: number;
+  property: PropertiesModel[];
+}
 interface AllDataDataProps {
   category: string;
   groupCategory: string;
   properties: PropertiesModel[];
+  webServiceProperties: WebServicePropertiesModel[];
 }
 
 interface AllDataProps {
@@ -218,9 +225,9 @@ export const Sidebar = forwardRef((_, ref) => {
     } catch (err) {
       console.log(err);
     } finally {
-      if (location.latitude && location.longitude) {
-        loadWebServiceGetPropertiesByGeom();
-      }
+      // if (location.latitude && location.longitude) {
+      //   loadWebServiceGetPropertiesByGeom();
+      // }
       setIsLoading((value) => ({ ...value, byAllUriTitle: false }));
     }
   };
@@ -230,11 +237,22 @@ export const Sidebar = forwardRef((_, ref) => {
       const { data, status } = await getAPIWebServiceAll();
       if (status === 200) {
         const groupData = getDistinctGroups(data.Data);
-        if (groupData) {
+        const customOrder = ["Deteksi", "Laju", "Alur", "Evaluasi"];
+        const orderData = groupData.sort((a, b) => {
+          const indexA = customOrder.findIndex((order) =>
+            a.Title.includes(order)
+          );
+          const indexB = customOrder.findIndex((order) =>
+            b.Title.includes(order)
+          );
+          return indexA - indexB;
+        });
+        console.log({ orderData });
+        if (orderData) {
           setGroupTab((value) => ({
             ...value,
-            selected: groupData[3],
-            data: groupData,
+            selected: orderData[2],
+            data: orderData,
           }));
         }
       }
@@ -256,8 +274,17 @@ export const Sidebar = forwardRef((_, ref) => {
             codeGroup: codeGroup,
             ...(tahunValue !== null ? { startYear: tahunValue } : {}), // startYear
             ...(jenisInformasi !== null
-              ? { idWebServiceReference: jenisInformasi }
+              ? groupTab
+                ? groupTab.selected
+                  ? groupTab.selected.Title === "Alur & Status Tahapan"
+                    ? { idWebServiceReference: jenisInformasi }
+                    : {}
+                  : {}
+                : {}
               : {}), // idWebServiceReference
+            // ...(jenisInformasi !== null
+            //   ? { idWebServiceReference: jenisInformasi }
+            //   : {}), // idWebServiceReference
           };
 
           const { data, status } = await getAPIWebServiceGetPropertiesByGeom(
@@ -267,7 +294,13 @@ export const Sidebar = forwardRef((_, ref) => {
             const resData = data.Data;
 
             const uniqueGroupCategories = Array.from(
-              new Set(resData.map((item) => item.WebService.GroupCategory))
+              new Set(
+                resData
+                  .filter(
+                    (filterItem) => filterItem.WebService.GroupCategory !== null
+                  )
+                  .map((item) => item.WebService.GroupCategory)
+              )
             )
               .sort((a, b) => a.localeCompare(b))
               .map((category, index) => {
@@ -278,43 +311,87 @@ export const Sidebar = forwardRef((_, ref) => {
               });
 
             // Definisikan tipe data untuk item di groupedData
-            interface GroupedDataItem {
-              category: string;
-              properties: PropertiesModel[];
-              groupCategory: string;
-            }
 
             // Inisialisasi initialGroupedData dengan tipe GroupedDataItem[]
-            const initialGroupedData: GroupedDataItem[] = resData.map(
-              (item) => ({
-                category: item.WebService.Category,
-                properties: item.Properties,
-                groupCategory: item.WebService.GroupCategory,
-              })
+
+            const initialGroupedData: AllDataDataProps[] = resData.map(
+              (item) => {
+                return {
+                  category: item.WebService.Category,
+                  properties: item.Properties,
+                  groupCategory: item.WebService.GroupCategory,
+                  webServiceProperties: [
+                    {
+                      title: item.WebService.Title,
+                      property: item.Properties,
+                      timeSeries: item.WebService.TimeSeries,
+                    },
+                  ],
+                };
+              }
             );
 
             // Definisikan groupedData dengan tipe GroupedDataItem[]
-            const groupedData: GroupedDataItem[] = initialGroupedData.reduce(
+            const groupedData: AllDataDataProps[] = initialGroupedData.reduce(
               (acc, currentItem) => {
-                const existingCategory = acc.find(
-                  (entry) => entry.category === currentItem.category
+                // Cari atau buat grup berdasarkan `groupCategory`
+                let groupCategoryGroup = acc.find(
+                  (entry) => entry.groupCategory === currentItem.groupCategory
                 );
 
-                if (existingCategory) {
-                  existingCategory.properties.push(...currentItem.properties);
+                if (!groupCategoryGroup) {
+                  groupCategoryGroup = {
+                    groupCategory: currentItem.groupCategory,
+                    category: currentItem.category,
+                    properties: [],
+                    webServiceProperties: [],
+                  };
+                  acc.push(groupCategoryGroup);
+                }
+
+                // Periksa apakah grup kategori ada dalam `groupCategory`
+                const categoryGroup = acc.find(
+                  (entry) =>
+                    entry.groupCategory === currentItem.groupCategory &&
+                    entry.category === currentItem.category
+                );
+
+                if (categoryGroup) {
+                  // Jika grup kategori ada, gabungkan properties dan webServiceProperties
+                  categoryGroup.properties.push(...currentItem.properties);
+                  categoryGroup.webServiceProperties.push({
+                    title: currentItem.webServiceProperties[0].title,
+                    property: currentItem.webServiceProperties[0].property,
+                    timeSeries: currentItem.webServiceProperties[0].timeSeries,
+                  });
                 } else {
+                  // Jika grup kategori tidak ada, tambahkan sebagai grup baru
                   acc.push({
+                    groupCategory: currentItem.groupCategory,
                     category: currentItem.category,
                     properties: [...currentItem.properties],
-                    groupCategory: currentItem.groupCategory,
+                    webServiceProperties: [
+                      {
+                        title: currentItem.webServiceProperties[0].title,
+                        property: currentItem.webServiceProperties[0].property,
+                        timeSeries:
+                          currentItem.webServiceProperties[0].timeSeries,
+                      },
+                    ],
                   });
                 }
 
                 return acc;
               },
-              [] as GroupedDataItem[]
+              [] as AllDataDataProps[]
             );
+
             setAllData({
+              data: groupedData,
+              groupCategory: uniqueGroupCategories,
+            });
+
+            console.log({
               data: groupedData,
               groupCategory: uniqueGroupCategories,
             });
@@ -339,6 +416,8 @@ export const Sidebar = forwardRef((_, ref) => {
             return { label: item.Title, value: `${item.Id}` };
           });
           setDropdownJenisInformasi(newData);
+          setJenisInformasiDropdown(newData[0]);
+          setJenisInformasi(parseInt(newData[0].value));
         }
       }
     } catch (err) {
@@ -386,7 +465,7 @@ export const Sidebar = forwardRef((_, ref) => {
 
   // function
   const resetAlurStatusTahapanDropdown = () => {
-    if (jenisInformasi) setJenisInformasi(null);
+    // if (jenisInformasi) setJenisInformasi(null);
     if (tahunValue) setTahunValue(null);
   };
   const getDistinctGroups = (
@@ -434,6 +513,12 @@ export const Sidebar = forwardRef((_, ref) => {
       groupTab.selected.Title !== "Alur & Status Tahapan"
     ) {
       resetAlurStatusTahapanDropdown();
+    }
+  }, [groupTab?.selected]);
+  useEffect(() => {
+    if (groupTab && groupTab.selected) {
+      setAllData(null);
+      loadWebServiceGetPropertiesByGeom();
     }
   }, [groupTab?.selected]);
 
@@ -557,9 +642,11 @@ export const Sidebar = forwardRef((_, ref) => {
                           ? activeClassName
                           : inActiveClassName,
                         "border border-gray-300",
+                        isLoading.getPropertiesByGeom &&
+                          "opacity-80 cursor-default",
                       ])}
                       onClick={() => {
-                        if (item) {
+                        if (item && !isLoading.getPropertiesByGeom) {
                           setGroupTab((value) => ({
                             ...value,
                             selected: item,
@@ -574,6 +661,7 @@ export const Sidebar = forwardRef((_, ref) => {
                             ? "text-white"
                             : "text-gray-700",
                           "font-medium",
+                          isLoading.getPropertiesByGeom && " opacity-80",
                         ])}
                       >
                         {item.Title}
@@ -660,7 +748,7 @@ export const Sidebar = forwardRef((_, ref) => {
                                   containerClassName={cn([
                                     "grid-cols-2",
                                     ThreeGrid && "grid-cols-3",
-                                    FourGrid && "grid-cols-4",
+                                    // FourGrid && "grid-cols-4",
                                     item.category === "Deforestasi" &&
                                       "grid-cols-2",
                                   ])}
@@ -686,7 +774,7 @@ export const Sidebar = forwardRef((_, ref) => {
                                           description:
                                             property.Value === ""
                                               ? "-"
-                                              : property.Value,
+                                              : formatNumber(property.Value),
                                         };
                                       } else {
                                         return {
@@ -694,7 +782,7 @@ export const Sidebar = forwardRef((_, ref) => {
                                           description:
                                             property.Value === ""
                                               ? "-"
-                                              : property.Value,
+                                              : formatNumber(property.Value),
                                         };
                                       }
                                     }
@@ -705,60 +793,175 @@ export const Sidebar = forwardRef((_, ref) => {
                           })}
                     </div>
                   )
-                ) : //   (
-                //   activeData.map((item, index) => {
-                //     return (
-                //       item.data &&
-                //       item.data
-                //         .filter((dataItem, i, self) => {
-                //           // Pastikan hanya item dengan WebService.Group.Title unik dan Properties yang tidak kosong
-                //           const { WebService, Properties } = dataItem;
-                //           return (
-                //             Properties.length > 0 &&
-                //             i ===
-                //               self.findIndex(
-                //                 (otherItem) =>
-                //                   otherItem.WebService.Group.Title ===
-                //                   WebService.Group.Title
-                //               )
-                //           );
-                //         })
-                //         .map((dataItem, dataIndex) => {
-                //           const { Properties, WebService } = dataItem;
+                ) : null}
 
-                //           // Kondisi tambahan untuk menampilkan data sesuai logika yang diinginkan
-                //           // const shouldDisplayGroup =
-                //           //   WebService.Group.Title === groupTitleText;
-                //           // const shouldDisplayCategory =
-                //           //   WebService.GroupCategory === groupCategoryText;
+                {/* TODO: Deteksi Perencanaan & Pengelolaan  */}
+                {groupTab.selected.Title ===
+                "Deteksi Perencanaan & Pengelolaan" ? (
+                  isLoading.getPropertiesByGeom && allData === null ? (
+                    <div className="flex justify-center">
+                      <AiOutlineLoading3Quarters className="animate-spin text-4xl text-gray-400 text-center" />
+                    </div>
+                  ) : (
+                    <div>
+                      {allData &&
+                        allData.data
+                          .filter(
+                            (filterItem) => filterItem.groupCategory === null
+                          )
+                          .map((i, indexKey) => {
+                            return (
+                              <div key={indexKey}>
+                                <p className="text-body-2 text-gray-900 font-medium mb-6">
+                                  {i.category}
+                                </p>
+                                <div>
+                                  {i.webServiceProperties.map((item, index) => {
+                                    return (
+                                      <ContainerInformation
+                                        key={index}
+                                        title={item.title}
+                                        secondTitle={`Tahun ${item.timeSeries}`}
+                                        containerClassName={cn([
+                                          index !== 0 && "mt-4",
+                                        ])}
+                                      >
+                                        <ContainerData
+                                          isLoading={
+                                            isLoading.getPropertiesByGeom
+                                          }
+                                          containerClassName={cn([
+                                            "grid-cols-2",
+                                          ])}
+                                          data={item.property.map(
+                                            (property, indexProperty) => {
+                                              return {
+                                                title: property.Key,
+                                                description:
+                                                  property.Value === ""
+                                                    ? "-"
+                                                    : formatNumber(
+                                                        property.Value
+                                                      ),
+                                              };
+                                            }
+                                          )}
+                                        />
+                                      </ContainerInformation>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            );
+                          })}
+                      <div className="rounded-lg flex w-full mb-6 mt-6">
+                        {allData &&
+                          allData.groupCategory
+                            .sort((a, b) => (a.value > b.value ? -1 : 1))
+                            .map((item, index) => {
+                              return (
+                                <div
+                                  key={index}
+                                  className={cn([
+                                    "w-full text-center",
+                                    index === 0 && "rounded-l-lg",
+                                    index + 1 ===
+                                      allData.groupCategory.length &&
+                                      "rounded-r-lg",
+                                    "bg-white shadow-small border cursor-pointer",
+                                    item.isActive &&
+                                      "bg-primary text-white cursor-default",
+                                  ])}
+                                  onClick={() => {
+                                    handleTabClick(index);
+                                  }}
+                                >
+                                  <p
+                                    className={cn([
+                                      "py-[9px] px-4 text-body-3",
+                                    ])}
+                                  >
+                                    {item.value}
+                                  </p>
+                                </div>
+                              );
+                            })}
+                      </div>
+                      {allData &&
+                        allData.data
+                          .filter((item) => {
+                            const activeGroupCategory =
+                              allData.groupCategory.find(
+                                (category) => category.isActive
+                              );
+                            return (
+                              activeGroupCategory &&
+                              item.groupCategory === activeGroupCategory.value
+                            );
+                          })
+                          .map((item, index) => {
+                            const TwoGrid = item.properties.length === 2;
+                            const ThreeGrid = item.properties.length === 3;
+                            const FourGrid = item.properties.length > 3;
 
-                //           const FourGrid =
-                //             Properties.length > 2 && Properties.length < 5;
-
-                //           return (
-                //             <ContainerInformation
-                //               title={WebService.Category}
-                //               key={dataIndex}
-                //             >
-                //               <ContainerData
-                //                 containerClassName={cn([
-                //                   "grid-cols-2",
-                //                   FourGrid && "grid-cols-4",
-                //                 ])}
-                //                 data={Properties.map((property) => ({
-                //                   title: property.Key,
-                //                   description: property.Value,
-                //                 }))}
-                //               />
-                //             </ContainerInformation>
-                //           );
-                //         })
-                //     );
-                //   })
-                // )
-                null}
+                            return (
+                              <ContainerInformation
+                                containerClassName={cn([index !== 0 && "mt-4"])}
+                                title={item.category}
+                                key={index}
+                              >
+                                <ContainerData
+                                  isLoading={isLoading.getPropertiesByGeom}
+                                  containerClassName={cn([
+                                    "grid-cols-2",
+                                    ThreeGrid && "grid-cols-3",
+                                    // FourGrid && "grid-cols-4",
+                                    item.category === "Deforestasi" &&
+                                      "grid-cols-2",
+                                  ])}
+                                  //
+                                  // descriptionClassName={cn([
+                                  //   TwoGrid && "justify-self-end",
+                                  // ])}
+                                  // titleClassName={cn(["justify-self-end"])}
+                                  //
+                                  data={item.properties.map(
+                                    (property, indexProperty) => {
+                                      if (item.category === "Deforestasi") {
+                                        return {
+                                          dataClassName: `${cn([
+                                            item.category === "Deforestasi" &&
+                                              "col-span-1",
+                                          ])}`,
+                                          title:
+                                            indexProperty === 0 ||
+                                            indexProperty === 1
+                                              ? property.Key
+                                              : "",
+                                          description:
+                                            property.Value === ""
+                                              ? "-"
+                                              : formatNumber(property.Value),
+                                        };
+                                      } else {
+                                        return {
+                                          title: property.Key,
+                                          description:
+                                            property.Value === ""
+                                              ? "-"
+                                              : formatNumber(property.Value),
+                                        };
+                                      }
+                                    }
+                                  )}
+                                />
+                              </ContainerInformation>
+                            );
+                          })}
+                    </div>
+                  )
+                ) : null}
                 {/* TODO: Alur & Status Tahapan  */}
-
                 {groupTab.selected.Title === "Alur & Status Tahapan" ? (
                   <>
                     {tahunData.length > 0 && (
@@ -780,6 +983,7 @@ export const Sidebar = forwardRef((_, ref) => {
                         items={dropdownJenisInformasi}
                         label="Jenis Informasi"
                         title="Jenis Informasi"
+                        defaultSelected={[dropdownJenisInformasi[0].value]}
                         onSelect={(e) => {
                           if (e.length > 0) {
                             setJenisInformasiDropdown(e[0]);
@@ -792,190 +996,101 @@ export const Sidebar = forwardRef((_, ref) => {
                     {jenisInformasiDropdown &&
                       jenisInformasiDropdown.label === "Persetujuan" && (
                         <div>
-                          {alurData &&
-                            alurData.data &&
-                            alurData.data.persetujuan &&
-                            alurData.data.persetujuan.PPHTR && (
-                              <ContainerInformation
-                                title={alurData.data.persetujuan.PPHTR.title}
-                              >
-                                <ContainerData
-                                  containerClassName="grid-cols-2"
-                                  data={alurData.data.persetujuan.PPHTR.data1.map(
-                                    (item, index) => {
-                                      return {
-                                        description: item.value,
-                                        title: item.title,
-                                      };
-                                    }
-                                  )}
-                                />
-                                <ContainerData
-                                  containerClassName="grid-cols-2 mt-4"
-                                  data={alurData.data.persetujuan.PPHTR.data2.map(
-                                    (item, index) => {
-                                      return {
-                                        description: item.value,
-                                        title: item.title,
-                                      };
-                                    }
-                                  )}
-                                />
-                              </ContainerInformation>
-                            )}
-                          {alurData &&
-                            alurData.data &&
-                            alurData.data.persetujuan &&
-                            alurData.data.persetujuan.PPHD && (
-                              <ContainerInformation
-                                containerClassName="mt-4"
-                                title={alurData.data.persetujuan.PPHD.title}
-                              >
-                                <ContainerData
-                                  containerClassName="grid-cols-2"
-                                  data={alurData.data.persetujuan.PPHD.data1.map(
-                                    (item, index) => {
-                                      return {
-                                        description: item.value,
-                                        title: item.title,
-                                      };
-                                    }
-                                  )}
-                                />
-                              </ContainerInformation>
-                            )}
-                          {alurData &&
-                            alurData.data &&
-                            alurData.data.persetujuan &&
-                            alurData.data.persetujuan.PKK && (
-                              <ContainerInformation
-                                containerClassName="mt-4"
-                                title={alurData.data.persetujuan.PKK.title}
-                              >
-                                <ContainerData
-                                  containerClassName="grid-cols-2"
-                                  data={alurData.data.persetujuan.PKK.data1.map(
-                                    (item, index) => {
-                                      return {
-                                        description: item.value,
-                                        title: item.title,
-                                      };
-                                    }
-                                  )}
-                                />
-                                <ContainerData
-                                  containerClassName="grid-cols-2 mt-4"
-                                  data={alurData.data.persetujuan.PKK.data2.map(
-                                    (item, index) => {
-                                      return {
-                                        description: item.value,
-                                        title: item.title,
-                                      };
-                                    }
-                                  )}
-                                />
-                              </ContainerInformation>
-                            )}
-                          {alurData &&
-                            alurData.data &&
-                            alurData.data.persetujuan &&
-                            alurData.data.persetujuan.PPKHN && (
-                              <ContainerInformation
-                                containerClassName="mt-4"
-                                title={alurData.data.persetujuan.PPKHN.title}
-                              >
-                                <ContainerData
-                                  containerClassName="grid-cols-2"
-                                  data={alurData.data.persetujuan.PPKHN.data1.map(
-                                    (item, index) => {
-                                      return {
-                                        description: item.value,
-                                        title: item.title,
-                                      };
-                                    }
-                                  )}
-                                />
-                                <ContainerData
-                                  containerClassName="grid-cols-2 mt-4"
-                                  data={alurData.data.persetujuan.PPKHN.data2.map(
-                                    (item, index) => {
-                                      return {
-                                        description: item.value,
-                                        title: item.title,
-                                      };
-                                    }
-                                  )}
-                                />
-                              </ContainerInformation>
-                            )}
-                          {alurData &&
-                            alurData.data &&
-                            alurData.data.persetujuan &&
-                            alurData.data.persetujuan.PPKHEksporasi && (
-                              <ContainerInformation
-                                containerClassName="mt-4"
-                                title={
-                                  alurData.data.persetujuan.PPKHEksporasi.title
-                                }
-                              >
-                                <ContainerData
-                                  containerClassName="grid-cols-2"
-                                  data={alurData.data.persetujuan.PPKHEksporasi.data1.map(
-                                    (item, index) => {
-                                      return {
-                                        description: item.value,
-                                        title: item.title,
-                                      };
-                                    }
-                                  )}
-                                />
-                                <ContainerData
-                                  containerClassName="grid-cols-2 mt-4"
-                                  data={alurData.data.persetujuan.PPKHEksporasi.data2.map(
-                                    (item, index) => {
-                                      return {
-                                        description: item.value,
-                                        title: item.title,
-                                      };
-                                    }
-                                  )}
-                                />
-                              </ContainerInformation>
-                            )}
-                          {alurData &&
-                            alurData.data &&
-                            alurData.data.persetujuan &&
-                            alurData.data.persetujuan.NonTambang && (
-                              <ContainerInformation
-                                containerClassName="mt-4"
-                                title={
-                                  alurData.data.persetujuan.NonTambang.title
-                                }
-                              >
-                                <ContainerData
-                                  containerClassName="grid-cols-2"
-                                  data={alurData.data.persetujuan.NonTambang.data1.map(
-                                    (item, index) => {
-                                      return {
-                                        description: item.value,
-                                        title: item.title,
-                                      };
-                                    }
-                                  )}
-                                />
-                                <ContainerData
-                                  containerClassName="grid-cols-2 mt-4"
-                                  data={alurData.data.persetujuan.NonTambang.data2.map(
-                                    (item, index) => {
-                                      return {
-                                        description: item.value,
-                                        title: item.title,
-                                      };
-                                    }
-                                  )}
-                                />
-                              </ContainerInformation>
-                            )}
+                          <div className="rounded-lg flex w-full">
+                            {/* {allData &&
+                              allData.groupCategory
+                                .sort((a, b) => (a.value > b.value ? -1 : 1))
+                                .map((item, index) => {
+                                  return (
+                                    <div
+                                      key={index}
+                                      className={cn([
+                                        "w-full text-center",
+                                        index === 0 && "rounded-l-lg",
+                                        index + 1 ===
+                                          allData.groupCategory.length &&
+                                          "rounded-r-lg",
+                                        "bg-white shadow-small border cursor-pointer",
+                                        item.isActive &&
+                                          "bg-primary text-white cursor-default",
+                                      ])}
+                                      onClick={() => {
+                                        handleTabClick(index);
+                                      }}
+                                    >
+                                      <p
+                                        className={cn([
+                                          "py-[9px] px-4 text-body-3",
+                                        ])}
+                                      >
+                                        {item.value}
+                                      </p>
+                                    </div>
+                                  );
+                                })} */}
+                          </div>
+                          {allData &&
+                            allData.data.map((item, index) => {
+                              const TwoGrid = item.properties.length === 2;
+                              const ThreeGrid = item.properties.length === 3;
+                              const FourGrid = item.properties.length > 3;
+
+                              return (
+                                <ContainerInformation
+                                  containerClassName={cn([
+                                    index !== 0 && "mt-4",
+                                  ])}
+                                  title={item.category}
+                                  key={index}
+                                >
+                                  <ContainerData
+                                    isLoading={isLoading.getPropertiesByGeom}
+                                    containerClassName={cn([
+                                      "grid-cols-2",
+                                      ThreeGrid && "grid-cols-3",
+                                      // FourGrid && "grid-cols-4",
+                                      item.category === "Deforestasi" &&
+                                        "grid-cols-2",
+                                    ])}
+                                    //
+                                    // descriptionClassName={cn([
+                                    //   TwoGrid && "justify-self-end",
+                                    // ])}
+                                    // titleClassName={cn(["justify-self-end"])}
+                                    //
+                                    data={item.properties.map(
+                                      (property, indexProperty) => {
+                                        if (item.category === "Deforestasi") {
+                                          return {
+                                            dataClassName: `${cn([
+                                              item.category === "Deforestasi" &&
+                                                "col-span-1",
+                                            ])}`,
+                                            title:
+                                              indexProperty === 0 ||
+                                              indexProperty === 1
+                                                ? property.Key
+                                                : "",
+                                            description:
+                                              property.Value === ""
+                                                ? "-"
+                                                : formatNumber(property.Value),
+                                          };
+                                        } else {
+                                          return {
+                                            title: property.Key,
+                                            description:
+                                              property.Value === ""
+                                                ? "-"
+                                                : formatNumber(property.Value),
+                                          };
+                                        }
+                                      }
+                                    )}
+                                  />
+                                </ContainerInformation>
+                              );
+                            })}
                         </div>
                       )}
                     {/* TODO: Daya Dukung Dan Tampung */}
@@ -983,329 +1098,280 @@ export const Sidebar = forwardRef((_, ref) => {
                       jenisInformasiDropdown.label ===
                         "Daya Dukung & Tampung" && (
                         <div className="">
-                          {alurData &&
-                            alurData.data &&
-                            alurData.data.dayaDukungDanTampung && (
-                              <div>
-                                <ContainerInformation
-                                  title={
-                                    alurData.data.dayaDukungDanTampung
-                                      .dayaDukung.title
-                                  }
-                                >
-                                  <ContainerData
-                                    containerClassName="grid-cols-2"
-                                    data={alurData.data.dayaDukungDanTampung.dayaDukung.data1.map(
-                                      (item, index) => {
-                                        return {
-                                          description: item.value,
-                                          title: item.title,
-                                        };
-                                      }
-                                    )}
-                                  />
-                                  <ContainerData
-                                    containerClassName="grid-cols-2 mt-4"
-                                    data={alurData.data.dayaDukungDanTampung.dayaDukung.data2.map(
-                                      (item, index) => {
-                                        return {
-                                          description: item.value,
-                                          title: item.title,
-                                        };
-                                      }
-                                    )}
-                                  />
-                                </ContainerInformation>
-                                <ContainerInformation
-                                  containerClassName="mt-4"
-                                  title={
-                                    alurData.data.dayaDukungDanTampung
-                                      .dayaTampung.title
-                                  }
-                                >
-                                  <ContainerData
-                                    containerClassName="grid-cols-2"
-                                    data={alurData.data.dayaDukungDanTampung.dayaTampung.data1.map(
-                                      (item, index) => {
-                                        return {
-                                          description: item.value,
-                                          title: item.title,
-                                        };
-                                      }
-                                    )}
-                                  />
-                                  <ContainerData
-                                    containerClassName="grid-cols-2 mt-4"
-                                    data={alurData.data.dayaDukungDanTampung.dayaTampung.data2.map(
-                                      (item, index) => {
-                                        return {
-                                          description: item.value,
-                                          title: item.title,
-                                        };
-                                      }
-                                    )}
-                                  />
-                                </ContainerInformation>
-                              </div>
-                            )}
+                          {allData &&
+                            allData.data
+                              .filter(
+                                (filterItem) =>
+                                  filterItem.groupCategory === null
+                              )
+                              .map((i, indexKey) => {
+                                return (
+                                  <div key={indexKey}>
+                                    <div>
+                                      {i.webServiceProperties.map(
+                                        (item, index) => {
+                                          return (
+                                            <ContainerInformation
+                                              key={index}
+                                              title={item.title}
+                                              containerClassName={cn([
+                                                indexKey !== 0 && "mt-4",
+                                              ])}
+                                            >
+                                              <ContainerData
+                                                isLoading={
+                                                  isLoading.getPropertiesByGeom
+                                                }
+                                                containerClassName={cn([
+                                                  "grid-cols-2",
+                                                ])}
+                                                data={item.property.map(
+                                                  (property, indexProperty) => {
+                                                    return {
+                                                      title: property.Key,
+                                                      description:
+                                                        property.Value === ""
+                                                          ? "-"
+                                                          : formatNumber(
+                                                              property.Value
+                                                            ),
+                                                    };
+                                                  }
+                                                )}
+                                              />
+                                            </ContainerInformation>
+                                          );
+                                        }
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
                         </div>
                       )}
                     {/* TODO: Amdal */}
                     {jenisInformasiDropdown &&
                       jenisInformasiDropdown.label === "Amdal" && (
                         <div className="">
-                          {alurData && alurData.data && alurData.data.amdal && (
-                            <div>
-                              <ContainerInformation
-                                title={alurData.data.amdal.amdal.title}
-                              >
-                                <ContainerData
-                                  containerClassName="grid-cols-2"
-                                  data={alurData.data.amdal.amdal.data1.map(
-                                    (item, index) => {
-                                      return {
-                                        description: item.value,
-                                        title: item.title,
-                                      };
-                                    }
-                                  )}
-                                />
-                                <ContainerData
-                                  containerClassName="grid-cols-2 mt-4"
-                                  data={alurData.data.amdal.amdal.data2.map(
-                                    (item, index) => {
-                                      return {
-                                        description: item.value,
-                                        title: item.title,
-                                      };
-                                    }
-                                  )}
-                                />
-                              </ContainerInformation>
-                            </div>
-                          )}
+                          {allData &&
+                            allData.data
+                              .filter(
+                                (filterItem) =>
+                                  filterItem.groupCategory === null
+                              )
+                              .map((i, indexKey) => {
+                                return (
+                                  <div key={indexKey}>
+                                    <div>
+                                      {i.webServiceProperties.map(
+                                        (item, index) => {
+                                          return (
+                                            <ContainerInformation
+                                              key={index}
+                                              title={item.title}
+                                              containerClassName={cn([
+                                                indexKey !== 0 && "mt-4",
+                                              ])}
+                                            >
+                                              <ContainerData
+                                                isLoading={
+                                                  isLoading.getPropertiesByGeom
+                                                }
+                                                containerClassName={cn([
+                                                  "grid-cols-2",
+                                                ])}
+                                                data={item.property.map(
+                                                  (property, indexProperty) => {
+                                                    return {
+                                                      title: property.Key,
+                                                      description:
+                                                        property.Value === ""
+                                                          ? "-"
+                                                          : formatNumber(
+                                                              property.Value
+                                                            ),
+                                                    };
+                                                  }
+                                                )}
+                                              />
+                                            </ContainerInformation>
+                                          );
+                                        }
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
                         </div>
                       )}
                     {/* TODO: UKL-UPL */}
                     {jenisInformasiDropdown &&
                       jenisInformasiDropdown.label === "UKL-UPL" && (
                         <div className="">
-                          {alurData &&
-                            alurData.data &&
-                            alurData.data.uklUpl && (
-                              <div>
-                                <ContainerInformation
-                                  title={alurData.data.uklUpl.uklUpl.title}
-                                >
-                                  <ContainerData
-                                    containerClassName="grid-cols-2"
-                                    data={alurData.data.uklUpl.uklUpl.data1.map(
-                                      (item, index) => {
-                                        return {
-                                          description: item.value,
-                                          title: item.title,
-                                        };
-                                      }
-                                    )}
-                                  />
-                                  <ContainerData
-                                    containerClassName="grid-cols-2 mt-4"
-                                    data={alurData.data.uklUpl.uklUpl.data2.map(
-                                      (item, index) => {
-                                        return {
-                                          description: item.value,
-                                          title: item.title,
-                                        };
-                                      }
-                                    )}
-                                  />
-                                </ContainerInformation>
-                              </div>
-                            )}
+                          {allData &&
+                            allData.data
+                              .filter(
+                                (filterItem) =>
+                                  filterItem.groupCategory === null
+                              )
+                              .map((i, indexKey) => {
+                                return (
+                                  <div key={indexKey}>
+                                    <div>
+                                      {i.webServiceProperties.map(
+                                        (item, index) => {
+                                          return (
+                                            <ContainerInformation
+                                              key={index}
+                                              title={item.title}
+                                              containerClassName={cn([
+                                                indexKey !== 0 && "mt-4",
+                                              ])}
+                                            >
+                                              <ContainerData
+                                                isLoading={
+                                                  isLoading.getPropertiesByGeom
+                                                }
+                                                containerClassName={cn([
+                                                  "grid-cols-2",
+                                                ])}
+                                                data={item.property.map(
+                                                  (property, indexProperty) => {
+                                                    return {
+                                                      title: property.Key,
+                                                      description:
+                                                        property.Value === ""
+                                                          ? "-"
+                                                          : formatNumber(
+                                                              property.Value
+                                                            ),
+                                                    };
+                                                  }
+                                                )}
+                                              />
+                                            </ContainerInformation>
+                                          );
+                                        }
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
                         </div>
                       )}
                     {/* TODO: Permohonan */}
                     {jenisInformasiDropdown &&
                       jenisInformasiDropdown.label === "Permohonan" && (
                         <div className="">
-                          {alurData &&
-                            alurData.data &&
-                            alurData.data.permohonan && (
-                              <div>
-                                <ContainerInformation
-                                  title={
-                                    alurData.data.permohonan.permohonan.title
-                                  }
-                                >
-                                  <ContainerData
-                                    containerClassName="grid-cols-2"
-                                    data={alurData.data.permohonan.permohonan.data1.map(
-                                      (item, index) => {
-                                        return {
-                                          description: item.value,
-                                          title: item.title,
-                                        };
-                                      }
-                                    )}
-                                  />
-                                  <ContainerData
-                                    containerClassName="grid-cols-2 mt-4"
-                                    data={alurData.data.permohonan.permohonan.data2.map(
-                                      (item, index) => {
-                                        return {
-                                          description: item.value,
-                                          title: item.title,
-                                        };
-                                      }
-                                    )}
-                                  />
-                                  <ContainerData
-                                    containerClassName="grid-cols-2 mt-4"
-                                    data={alurData.data.permohonan.permohonan.data3.map(
-                                      (item, index) => {
-                                        return {
-                                          description: item.value,
-                                          title: item.title,
-                                        };
-                                      }
-                                    )}
-                                  />
-                                </ContainerInformation>
-                              </div>
-                            )}
+                          {allData &&
+                            allData.data
+                              .filter(
+                                (filterItem) =>
+                                  filterItem.groupCategory === null
+                              )
+                              .map((i, indexKey) => {
+                                return (
+                                  <div key={indexKey}>
+                                    <div>
+                                      {i.webServiceProperties.map(
+                                        (item, index) => {
+                                          return (
+                                            <ContainerInformation
+                                              key={index}
+                                              title={item.title}
+                                              containerClassName={cn([
+                                                indexKey !== 0 && "mt-4",
+                                              ])}
+                                            >
+                                              <ContainerData
+                                                isLoading={
+                                                  isLoading.getPropertiesByGeom
+                                                }
+                                                containerClassName={cn([
+                                                  "grid-cols-2",
+                                                ])}
+                                                data={item.property.map(
+                                                  (property, indexProperty) => {
+                                                    return {
+                                                      title: property.Key,
+                                                      description:
+                                                        property.Value === ""
+                                                          ? "-"
+                                                          : formatNumber(
+                                                              property.Value
+                                                            ),
+                                                    };
+                                                  }
+                                                )}
+                                              />
+                                            </ContainerInformation>
+                                          );
+                                        }
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
                         </div>
                       )}
                     {/* TODO: Pengukuhan, Penetapan & Pelepasan */}
                     {jenisInformasiDropdown &&
                       jenisInformasiDropdown.label ===
-                        "Pengukuhan, Penetapan & Pelepasan" && (
+                        "Pengukuhan,Penetapan & Pelepasan" && (
                         <div className="">
-                          {alurData &&
-                            alurData.data &&
-                            alurData.data.pengukuhanPenetapanDanPelepasan && (
-                              <div>
-                                <ContainerInformation
-                                  title={
-                                    alurData.data
-                                      .pengukuhanPenetapanDanPelepasan.penetapan
-                                      .title
-                                  }
-                                >
-                                  <ContainerData
-                                    containerClassName="grid-cols-2"
-                                    data={alurData.data.pengukuhanPenetapanDanPelepasan.penetapan.data1.map(
-                                      (item, index) => {
-                                        return {
-                                          description: item.value,
-                                          title: item.title,
-                                        };
-                                      }
-                                    )}
-                                  />
-                                  <ContainerData
-                                    containerClassName="grid-cols-2 mt-4"
-                                    data={alurData.data.pengukuhanPenetapanDanPelepasan.penetapan.data2.map(
-                                      (item, index) => {
-                                        return {
-                                          description: item.value,
-                                          title: item.title,
-                                        };
-                                      }
-                                    )}
-                                  />
-                                  <ContainerData
-                                    containerClassName="grid-cols-2 mt-4"
-                                    data={alurData.data.permohonan.permohonan.data3.map(
-                                      (item, index) => {
-                                        return {
-                                          description: item.value,
-                                          title: item.title,
-                                        };
-                                      }
-                                    )}
-                                  />
-                                </ContainerInformation>
-                                <ContainerInformation
-                                  containerClassName="mt-4"
-                                  title={
-                                    alurData.data
-                                      .pengukuhanPenetapanDanPelepasan
-                                      .pengukuhan.title
-                                  }
-                                >
-                                  <ContainerData
-                                    containerClassName="grid-cols-2"
-                                    data={alurData.data.pengukuhanPenetapanDanPelepasan.pengukuhan.data1.map(
-                                      (item, index) => {
-                                        return {
-                                          description: item.value,
-                                          title: item.title,
-                                        };
-                                      }
-                                    )}
-                                  />
-                                  <ContainerData
-                                    containerClassName="grid-cols-2 mt-4"
-                                    data={alurData.data.pengukuhanPenetapanDanPelepasan.pengukuhan.data2.map(
-                                      (item, index) => {
-                                        return {
-                                          description: item.value,
-                                          title: item.title,
-                                        };
-                                      }
-                                    )}
-                                  />
-                                </ContainerInformation>
-                                <ContainerInformation
-                                  containerClassName="mt-4"
-                                  title={
-                                    alurData.data
-                                      .pengukuhanPenetapanDanPelepasan.pelepasan
-                                      .title
-                                  }
-                                >
-                                  <ContainerData
-                                    containerClassName="grid-cols-2"
-                                    data={alurData.data.pengukuhanPenetapanDanPelepasan.pelepasan.data1.map(
-                                      (item, index) => {
-                                        return {
-                                          description: item.value,
-                                          title: item.title,
-                                        };
-                                      }
-                                    )}
-                                  />
-                                  <ContainerData
-                                    containerClassName="grid-cols-2 mt-4"
-                                    data={alurData.data.pengukuhanPenetapanDanPelepasan.pelepasan.data2.map(
-                                      (item, index) => {
-                                        return {
-                                          description: item.value,
-                                          title: item.title,
-                                        };
-                                      }
-                                    )}
-                                  />
-                                  <ContainerData
-                                    containerClassName="grid-cols-2 mt-4"
-                                    data={alurData.data.pengukuhanPenetapanDanPelepasan.pelepasan.data3.map(
-                                      (item, index) => {
-                                        return {
-                                          description: item.value,
-                                          title: item.title,
-                                        };
-                                      }
-                                    )}
-                                  />
-                                </ContainerInformation>
-                              </div>
-                            )}
+                          {allData &&
+                            allData.data
+                              .filter(
+                                (filterItem) =>
+                                  filterItem.groupCategory === null
+                              )
+                              .map((i, indexKey) => {
+                                return (
+                                  <div key={indexKey}>
+                                    <div>
+                                      {i.webServiceProperties.map(
+                                        (item, index) => {
+                                          return (
+                                            <ContainerInformation
+                                              key={index}
+                                              title={item.title}
+                                              containerClassName={cn([
+                                                indexKey !== 0 && "mt-4",
+                                              ])}
+                                            >
+                                              <ContainerData
+                                                isLoading={
+                                                  isLoading.getPropertiesByGeom
+                                                }
+                                                containerClassName={cn([
+                                                  "grid-cols-2",
+                                                ])}
+                                                data={item.property.map(
+                                                  (property, indexProperty) => {
+                                                    return {
+                                                      title: property.Key,
+                                                      description:
+                                                        property.Value === ""
+                                                          ? "-"
+                                                          : formatNumber(
+                                                              property.Value
+                                                            ),
+                                                    };
+                                                  }
+                                                )}
+                                              />
+                                            </ContainerInformation>
+                                          );
+                                        }
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
                         </div>
                       )}
                   </>
-                ) : (
-                  <></>
-                )}
+                ) : null}
               </>
             )}
             {/* TODO: Alur & Status Tahapan  */}

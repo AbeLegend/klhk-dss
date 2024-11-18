@@ -23,19 +23,23 @@ export const formatDate = (date: string | Date, format: string) => {
   return dayjs(date).format(format);
 };
 
-export const formatNumber = (value: number): string => {
-  if (isNaN(value)) return "0";
+export const formatNumber = (value: any): string => {
+  // Cek apakah value dapat dikonversi menjadi angka
+  const numberValue = Number(value);
 
-  const [integerPart, decimalPart] = value.toFixed(2).split(".");
+  // Jika value tidak valid sebagai angka, kembalikan input asli
+  if (isNaN(numberValue)) return value;
 
+  // Pecah menjadi bagian integer dan desimal, dengan pembulatan 2 desimal
+  const [integerPart, decimalPart] = numberValue.toFixed(2).split(".");
+
+  // Format bagian integer dengan pemisah ribuan
   const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 
-  if (Number(decimalPart) === 0) {
-    return formattedInteger;
-  }
+  // Jika desimal adalah 0, kembalikan hanya bagian integer
+  return decimalPart === "00" ? formattedInteger : `${formattedInteger},${decimalPart}`;
+};
 
-  return `${formattedInteger},${decimalPart}`;
-}
 export const generateUniqueColors = (count: number): string[] => {
   const colors: string[] = [];
   const usedColors = new Set<string>();
