@@ -96,7 +96,7 @@ export const OverlaySHP: FC = () => {
       <div
         className={cn([
           "absolute left-[1.5%] top-[20%] w-[25%] max-h-[75vh] bg-white shadow-medium p-4 rounded-2xl overflow-y-scroll overflow-x-scroll",
-          !data || (data.length == 0 && "hidden"),
+          (!data || data.length == 0) && "hidden",
         ])}
       >
         {/* {layer
