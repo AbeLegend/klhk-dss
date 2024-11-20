@@ -9,6 +9,8 @@ import Search from "@arcgis/core/widgets/Search";
 import Graphic from "@arcgis/core/Graphic";
 import Point from "@arcgis/core/geometry/Point";
 import SimpleMarkerSymbol from "@arcgis/core/symbols/SimpleMarkerSymbol";
+import Polygon from "@arcgis/core/geometry/Polygon";
+import SimpleFillSymbol from "@arcgis/core/symbols/SimpleFillSymbol";
 
 import "@arcgis/core/assets/esri/themes/light/main.css";
 import { useAppSelector } from "@/redux/store";
@@ -44,12 +46,16 @@ const MapComponent: FC<{
   // useDispatch
   const dispatch = useDispatch();
   // useAppSelector
-  const { layer, searchLocation, isOpenModal, location } = useAppSelector(
+  const { layer, searchLocation } = useAppSelector(
     (state) => state.mapInteraktif
   );
+  const { geom } = useAppSelector((state) => state.layer);
+
+  let activePointGraphic: Graphic | null = null;
 
   const handleMapClick = async (lat: number, long: number, map: MapView) => {
-    map.graphics.removeAll();
+    if (activePointGraphic) map.graphics.remove(activePointGraphic);
+
     const point = new Point({
       longitude: long,
       latitude: lat,
@@ -65,6 +71,8 @@ const MapComponent: FC<{
         },
       }),
     });
+    activePointGraphic = pointGraphic;
+
     map.graphics.add(pointGraphic);
     // Update location in Redux
     await dispatch(setLocation({ latitude: lat, longitude: long }));
@@ -79,6 +87,8 @@ const MapComponent: FC<{
     const urlFixed = getPathFromUrl(url);
     return new MapImageLayer({
       url: `/${prefix}/${removeUrlEndingNumber(urlFixed)}`,
+      useViewTime: true,
+      imageFormat: "png32",
     });
   };
 
@@ -177,6 +187,44 @@ const MapComponent: FC<{
     getUrlFromLayer();
     console.log({ layer });
   }, [layer]);
+
+  useEffect(() => {
+    if (view && geom !== "") {
+      const geomData = JSON.parse(geom);
+      const polygon = new Polygon({
+        rings: geomData.coordinates[0],
+        spatialReference: { wkid: 4326 },
+      });
+
+      const graphic = new Graphic({
+        geometry: polygon,
+
+        symbol: new SimpleFillSymbol({
+          // color: [227, 139, 79, 0.8],
+          // outline: {
+          //   color: [255, 255, 255],
+          //   width: 1,
+          // },
+        }),
+      });
+      view.when(() => {
+        view.graphics.add(graphic);
+
+        view
+          .goTo(
+            {
+              target: polygon.extent.expand(3),
+            },
+            {
+              animate: true,
+              duration: 1000,
+              easing: "ease-in-out",
+            }
+          )
+          .catch((err) => console.error("Error during zoom: ", err));
+      });
+    }
+  }, [view, geom]);
 
   return (
     <div ref={mapRef} className={cn(["h-screen w-full relative"])}>

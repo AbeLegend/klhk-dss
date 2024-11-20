@@ -87,3 +87,19 @@ export async function getAPIWebServiceByGeom(): Promise<AxiosResponse<WebService
     }
   }
 }
+export async function postAPIWebServiceIntersect(data: {
+  IdLayerService: string;
+  IdWebService: number[]
+}): Promise<AxiosResponse<WebServiceGetPropertiesByGeomResponse>> {
+  try {
+    const res = await fetch.post("/WebService/intersect", data)
+    return res;
+  } catch (error) {
+    if (error instanceof AxiosError && error.response) {
+      const errorMessage = error.response.data.message || "An error occurred";
+      throw new Error(errorMessage);
+    } else {
+      throw new Error("An unexpected error occurred");
+    }
+  }
+}

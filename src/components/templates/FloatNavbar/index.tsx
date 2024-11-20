@@ -15,11 +15,31 @@ import { setSearchLocation } from "@/redux/Map/MapInteraktif/slice";
 import { useClickOutside } from "@/hook";
 // asset
 import LogoFullImage from "@/images/logo/logo-full-dark.png";
-import { COOKIE_TOKEN } from "@/lib";
+import { convertFileToBase64, COOKIE_TOKEN } from "@/lib";
+import {
+  getAPILayerServiceById,
+  postAPILayerServiceUploadSHP,
+} from "@/api/responses";
+import { useAppSelector } from "@/redux/store";
+import { SetLoadingGeneral } from "@/redux/Loading/slice";
+import {
+  SetGeom,
+  SetIdLayerService,
+  SetShpMode,
+} from "@/redux/Map/LayerService/slice";
 
 // type
 interface FloatNavbarProps {
   searchWidget: Search | null;
+}
+
+interface FileDataType {
+  File: {
+    Filename: string;
+    Extension: string;
+    Base64: string;
+  };
+  FileType: number;
 }
 
 export const FloatNavbar: FC<FloatNavbarProps> = ({ searchWidget }) => {
@@ -29,11 +49,39 @@ export const FloatNavbar: FC<FloatNavbarProps> = ({ searchWidget }) => {
   const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
   // useRef
   const suggestionsRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // useRouter
   const router = useRouter();
   // useDispatch
   const dispatch = useDispatch();
+
+  // function
+  const uploadShp = async (fileData: FileDataType) => {
+    try {
+      const { data, status } = await postAPILayerServiceUploadSHP(fileData);
+      if (status === 200 || status === 201) {
+        dispatch(SetShpMode(true));
+        dispatch(SetIdLayerService(data.Data));
+        getLayerServiceById(data.Data);
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const getLayerServiceById = async (id: string) => {
+    try {
+      const { data, status } = await getAPILayerServiceById(id);
+      if (status === 200) {
+        dispatch(SetGeom(data.Data.Layers[0].Geom));
+      }
+    } catch (err) {
+      console.log(err);
+    } finally {
+      dispatch(SetLoadingGeneral(false));
+    }
+  };
 
   // handle
   const handleSearch = (value: string) => {
@@ -43,6 +91,38 @@ export const FloatNavbar: FC<FloatNavbarProps> = ({ searchWidget }) => {
   };
   const handleClickOutside = () => {
     setShowSuggestions(false);
+  };
+  const handleButtonUploadShp = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    dispatch(SetLoadingGeneral(true));
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    try {
+      const base64 = await convertFileToBase64(file);
+      const filename = file.name;
+      const extension = filename.split(".").pop() || "";
+
+      const result = {
+        File: {
+          Filename: filename,
+          Extension: extension,
+          Base64: base64,
+        },
+        FileType: 3,
+      };
+      uploadShp(result);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   // useEffect
@@ -64,6 +144,7 @@ export const FloatNavbar: FC<FloatNavbarProps> = ({ searchWidget }) => {
       setShowSuggestions(false);
     }
   }, [searchQuery, searchWidget]);
+
   // hooks
   useClickOutside(suggestionsRef, handleClickOutside);
 
@@ -89,6 +170,15 @@ export const FloatNavbar: FC<FloatNavbarProps> = ({ searchWidget }) => {
               label="Pilih File"
               variant="primary-destructive"
               size="sm"
+              type="button"
+              onClick={handleButtonUploadShp}
+            />
+            <input
+              type="file"
+              accept=".zip"
+              ref={fileInputRef}
+              className="hidden"
+              onChange={handleFileChange}
             />
           </div>
           {/* BEGIN: Search */}

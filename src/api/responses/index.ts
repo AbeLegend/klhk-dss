@@ -9,6 +9,7 @@ export * from "./(util)/tutupanLahan";
 // (simontana)
 export * from "./(simontana)/rekalkulasi";
 // (map)
+export * from "./(map)/layerService";
 export * from "./(map)/webService";
 export * from "./(map)/webServiceReference";
 

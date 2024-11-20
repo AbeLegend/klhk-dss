@@ -120,6 +120,7 @@ export const Sidebar = forwardRef((_, ref) => {
   const { location, isOpenModal, layer } = useAppSelector(
     (state) => state.mapInteraktif
   );
+
   // useRef
   const divRef = useRef<HTMLDivElement>(null);
   // data
@@ -247,7 +248,7 @@ export const Sidebar = forwardRef((_, ref) => {
           );
           return indexA - indexB;
         });
-        console.log({ orderData });
+        // console.log({ orderData });
         if (orderData) {
           setGroupTab((value) => ({
             ...value,

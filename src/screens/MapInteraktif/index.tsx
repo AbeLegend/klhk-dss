@@ -9,6 +9,8 @@ import Search from "@arcgis/core/widgets/Search";
 import { Sidebar } from "./sidebar";
 import { FloatNavbar } from "@/components/templates";
 import { usePermissions } from "@/hook";
+import { useAppSelector } from "@/redux/store";
+import { OverlaySHP } from "@/components/molecules";
 
 // asset
 
@@ -25,10 +27,11 @@ export const MapInteraktifScreen: FC = () => {
 
   // useState
   const [searchWidget, setSearchWidget] = useState<Search | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   // useRef
   const sidebarRef = useRef<{ triggerAction: () => void }>(null);
+  // useAppSelector
+  const IsLoading = useAppSelector((state) => state.loading);
   // handle
   const handleTriggerSidebarAction = () => {
     sidebarRef.current?.triggerAction();
@@ -37,15 +40,19 @@ export const MapInteraktifScreen: FC = () => {
 
   return (
     <main>
-      {!isLoading && (
-        <MapComponent
-          onSearchWidgetReady={(search) => setSearchWidget(search)}
-          onTriggerSidebar={handleTriggerSidebarAction}
-        >
-          <FloatNavbar searchWidget={searchWidget} />
-          <Sidebar ref={sidebarRef} />
-        </MapComponent>
-      )}
+      <MapComponent
+        onSearchWidgetReady={(search) => setSearchWidget(search)}
+        onTriggerSidebar={handleTriggerSidebarAction}
+      >
+        {IsLoading.general && (
+          <div className="absolute top-0 left-0 inset-0 bg-black opacity-80 z-[9999999999999] flex justify-center items-center">
+            <div className="relative bg-inherit w-14 h-14 rounded-full border-4 border-slate-600 border-b-transparent animate-spin" />
+          </div>
+        )}
+        <OverlaySHP />
+        <FloatNavbar searchWidget={searchWidget} />
+        <Sidebar ref={sidebarRef} />
+      </MapComponent>
     </main>
   );
 };
