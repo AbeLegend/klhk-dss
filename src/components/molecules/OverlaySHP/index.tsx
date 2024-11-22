@@ -159,21 +159,17 @@ export const OverlaySHP: FC = () => {
       loadIntersect(ids, loadLegends);
     }
   }, [layer]);
-  const processProperties = (properties: PropertiesType[]) => {
-    const processedData: { fungsi: string; luas: number }[] = [];
+  const processProperties = (properties: PropertiesType[][]) => {
+    let processedData: number = 0;
 
     // Iterasi data berdasarkan pola
-    for (let i = 0; i < properties.length / 2; i++) {
-      const fungsiIndex = i; // Indeks untuk fungsi
-      const luasIndex = i + Math.ceil(properties.length / 2); // Indeks untuk luas
-
-      const fungsi = properties[fungsiIndex]?.Value || "-";
-      const luas = parseFloat(properties[luasIndex]?.Value || "0");
-
-      processedData.push({
-        fungsi,
-        luas: isNaN(luas) ? 0 : luas, // Pastikan luas valid
-      });
+    for (let i = 0; i < properties.length; i++) {
+      for (let j = 0; j < properties[i].length; j++) {
+        // Jika Value adalah angka, maka tambahkan ke processedData
+        if (!isNaN(Number(properties[i][j].Value)) && properties[i][j].Key.toLowerCase().includes('luas')) {
+          processedData += Number(properties[i][j].Value);
+        }
+      }
     }
 
     return processedData;
@@ -231,9 +227,7 @@ export const OverlaySHP: FC = () => {
                             Total
                           </td>
                           <td className="border border-gray-300 px-4 py-2 text-center">
-                            {processProperties(item.properties[index])
-                              .filter((filter) => filter.luas)
-                              .reduce((total, prop) => total + prop.luas, 0)}
+                            {processProperties(item.properties)}
                           </td>
                         </tr>
                       </tbody>
