@@ -1,21 +1,22 @@
 // lib
 import { FC, useEffect, useState } from "react";
 // local
-import { cn } from "@/lib";
+import {
+  cn,
+  getPathFromUrl,
+  getUrlIdentifier,
+  LegendsType,
+  PropertiesType,
+  removeUrlEndingNumber,
+} from "@/lib";
 import { useAppSelector } from "@/redux/store";
 import { postAPIWebServiceIntersect } from "@/api/responses";
 import { DataWebserviceByGeom } from "@/redux/Map/MapInteraktif";
 
-// type
-type Property = {
-  Key: string;
-  Value: string;
-  Index: number;
-};
-
 type GroupedData = {
   category: string;
-  properties: Property[];
+  properties: PropertiesType[];
+  legends: LegendsType[];
 };
 
 export const OverlaySHP: FC = () => {
@@ -26,18 +27,15 @@ export const OverlaySHP: FC = () => {
   const [data, setData] = useState<
     {
       category: string;
-      properties: {
-        Key: string;
-        Value: string;
-        Index: number;
-      }[];
+      properties: PropertiesType[];
+      legends: LegendsType[];
     }[]
   >();
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   // function
   const groupByCategory = (data: DataWebserviceByGeom[]): GroupedData[] => {
-    const grouped: Record<string, Property[]> = {};
+    const grouped: Record<string, PropertiesType[]> = {};
 
     data.forEach((item) => {
       const category = item.WebService.Category;
@@ -50,11 +48,11 @@ export const OverlaySHP: FC = () => {
     return Object.entries(grouped).map(([category, properties]) => ({
       category,
       properties,
+      legends: [], // Will be populated later in `loadLegends`
     }));
   };
 
-  // loadData
-  const loadIntersect = async (id: number[]) => {
+  const loadIntersect = async (id: number[], callback: () => void) => {
     try {
       if (IdLayerService !== "" && id.length > 0) {
         const { data, status } = await postAPIWebServiceIntersect({
@@ -62,18 +60,86 @@ export const OverlaySHP: FC = () => {
           IdWebService: id,
         });
         if (status === 200 || status === 201) {
-          console.log(groupByCategory(data.Data));
-          setData(groupByCategory(data.Data));
+          const groupedData = groupByCategory(data.Data);
+          console.log("Grouped Data:", groupedData);
+          setData(groupedData);
+          callback();
         }
       }
     } catch (err) {
-      console.log(err);
-    } finally {
-      //
+      console.error("Error loading intersect data:", err);
+    }
+  };
+
+  const loadLegends = async () => {
+    try {
+      const activeLayers = layer.filter((item) => item.isActive);
+
+      if (activeLayers.length > 0) {
+        for (const item of activeLayers) {
+          if (item.data && item.data.length > 0) {
+            for (const value of item.data) {
+              const legends = await fetchLegend(value.WebService.Url);
+              setData((prevData) =>
+                prevData
+                  ? prevData.map((group) =>
+                      group.category === value.WebService.Category
+                        ? {
+                            ...group,
+                            legends: [...group.legends, ...legends],
+                          }
+                        : group
+                    )
+                  : []
+              );
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Error loading legends:", err);
+    }
+  };
+
+  const fetchLegend = async (url: string): Promise<LegendsType[]> => {
+    const prefix = getUrlIdentifier(url);
+    const urlFixed = getPathFromUrl(url);
+    const legendUrl = `/${prefix}${removeUrlEndingNumber(
+      urlFixed
+    )}/legend?f=json`;
+
+    try {
+      const response = await fetch(legendUrl, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      const data = await response.json();
+
+      // Extracting legends from the API response
+      const legends = data.layers?.flatMap((layer: any) =>
+        layer.legend.map((legend: any) => ({
+          label: legend.label,
+          imageData: legend.imageData,
+          values: legend.values,
+        }))
+      );
+
+      return legends || [];
+    } catch (error) {
+      console.error("Error fetching legend:", error);
+      return [];
     }
   };
 
   // useEffect
+  useEffect(() => {
+    console.log(data);
+  }, [data]);
   useEffect(() => {
     if (layer) {
       let ids: number[] = [];
@@ -87,50 +153,107 @@ export const OverlaySHP: FC = () => {
             })
           );
         });
-      loadIntersect(ids);
+      loadIntersect(ids, loadLegends);
     }
   }, [layer]);
+  const processProperties = (properties: PropertiesType[]) => {
+    const processedData: { fungsi: string; luas: number }[] = [];
+
+    // Iterasi data berdasarkan pola
+    for (let i = 0; i < properties.length / 2; i++) {
+      const fungsiIndex = i; // Indeks untuk fungsi
+      const luasIndex = i + Math.ceil(properties.length / 2); // Indeks untuk luas
+
+      const fungsi = properties[fungsiIndex]?.Value || "-";
+      const luas = parseFloat(properties[luasIndex]?.Value || "0");
+
+      processedData.push({
+        fungsi,
+        luas: isNaN(luas) ? 0 : luas, // Pastikan luas valid
+      });
+    }
+
+    return processedData;
+  };
 
   return (
     isShpMode && (
       <div
         className={cn([
-          "absolute left-[1.5%] top-[20%] w-[25%] max-h-[75vh] bg-white shadow-medium p-4 rounded-2xl overflow-y-scroll overflow-x-scroll",
+          "absolute left-[1.5%] top-[20%] w-[35%] max-h-[75vh] bg-white shadow-medium p-4 rounded-2xl overflow-y-scroll overflow-x-scroll",
           (!data || data.length == 0) && "hidden",
         ])}
       >
-        {/* {layer
-          .filter((filter) => filter.isActive === true)
-          .map((item, index) => {
-            return (
-              <div key={index} className="border">
-                {item.UriTitle}
-                {item.data &&
-                  item.data.length > 0 &&
-                  item.data.map((data, indexData) => {
-                    return <div key={indexData}>{data.WebService.Id}</div>;
-                  })}
-              </div>
-            );
-          })} */}
         <div className="grid gap-y-3">
           {data &&
             data.length > 0 &&
             data.map((item, index) => {
               return (
-                <div key={index} className="border rounded-md p-1">
-                  <h6 className="font-semibold">{item.category}</h6>
-                  <div>
-                    {item.properties.map((prop, indexProp) => {
-                      return (
-                        <div key={indexProp} className="flex">
-                          <p className="text-body-3 text-black font-medium">{`${prop.Key}:`}</p>
-                          <p className="text-body-3 text-gray-700">
-                            {prop.Value === "" ? " -" : ` ${prop.Value}`}
-                          </p>
-                        </div>
-                      );
-                    })}
+                <div key={index} className="">
+                  <div className="overflow-x-auto">
+                    <table className="w-full border border-gray-300 text-sm text-left">
+                      <thead>
+                        <tr className="bg-green-100">
+                          <th className="border border-gray-300 px-4 py-2 font-bold text-center">
+                            Fungsi {item.category}
+                          </th>
+                          <th className="border border-gray-300 px-4 py-2 font-bold text-center">
+                            Luas (Ha)
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {processProperties(item.properties).map(
+                          (prop, indexProp) => {
+                            const matchingLegend = item.legends.find((legend) =>
+                              prop.fungsi
+                                .toLowerCase()
+                                .includes(legend.label.toLowerCase())
+                            );
+
+                            return (
+                              <tr key={indexProp}>
+                                {/* Kolom Fungsi */}
+                                <td className="border border-gray-300 px-4 py-2">
+                                  {prop.fungsi}
+                                  {matchingLegend ? (
+                                    <img
+                                      src={`data:image/png;base64,${matchingLegend.imageData}`}
+                                      alt={matchingLegend.label}
+                                      className="w-6 h-6 mx-auto"
+                                    />
+                                  ) : (
+                                    <div
+                                      // src={`data:image/png;base64,${matchingLegend.imageData}`}
+                                      // alt={matchingLegend.label}
+                                      className="w-6 h-6 mx-auto bg-white border"
+                                    />
+                                  )}
+                                </td>
+                                {/* Kolom Luas */}
+                                <td className="border border-gray-300 px-4 py-2 text-center">
+                                  {prop.luas} {/* Menampilkan angka penuh */}
+                                </td>
+                              </tr>
+                            );
+                          }
+                        )}
+
+                        {/* Baris Total */}
+                        <tr>
+                          <td className="border border-gray-300 px-4 py-2 text-center font-bold">
+                            Total
+                          </td>
+                          <td className="border border-gray-300 px-4 py-2 text-center">
+                            {processProperties(item.properties).reduce(
+                              (total, prop) => total + prop.luas,
+                              0
+                            )}{" "}
+                            {/* Menampilkan total angka penuh */}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               );

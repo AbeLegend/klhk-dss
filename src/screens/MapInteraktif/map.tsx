@@ -11,6 +11,7 @@ import Point from "@arcgis/core/geometry/Point";
 import SimpleMarkerSymbol from "@arcgis/core/symbols/SimpleMarkerSymbol";
 import Polygon from "@arcgis/core/geometry/Polygon";
 import SimpleFillSymbol from "@arcgis/core/symbols/SimpleFillSymbol";
+import request from "@arcgis/core/request";
 
 import "@arcgis/core/assets/esri/themes/light/main.css";
 import { useAppSelector } from "@/redux/store";
@@ -85,8 +86,9 @@ const MapComponent: FC<{
   const createLayer = (url: string) => {
     const prefix = getUrlIdentifier(url);
     const urlFixed = getPathFromUrl(url);
+    const fullUrl = `/${prefix}${removeUrlEndingNumber(urlFixed)}?f=json`;
     return new MapImageLayer({
-      url: `/${prefix}/${removeUrlEndingNumber(urlFixed)}`,
+      url: fullUrl,
       useViewTime: true,
       imageFormat: "png32",
     });
@@ -185,7 +187,7 @@ const MapComponent: FC<{
 
   useEffect(() => {
     getUrlFromLayer();
-    console.log({ layer });
+    // console.log({ layer });
   }, [layer]);
 
   useEffect(() => {
@@ -213,7 +215,7 @@ const MapComponent: FC<{
         view
           .goTo(
             {
-              target: polygon.extent.expand(3),
+              target: polygon.extent.expand(5),
             },
             {
               animate: true,
