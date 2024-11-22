@@ -3,6 +3,7 @@ import { FC, useEffect, useState } from "react";
 // local
 import {
   cn,
+  formatNumber,
   getPathFromUrl,
   getUrlIdentifier,
   LegendsType,
@@ -11,10 +12,9 @@ import {
 } from "@/lib";
 import { useAppSelector } from "@/redux/store";
 import { postAPIWebServiceIntersect } from "@/api/responses";
-import {
-  DataWebserviceByGeom,
-  DataWebserviceByGeom2,
-} from "@/redux/Map/MapInteraktif";
+import { DataWebserviceByGeom2 } from "@/redux/Map/MapInteraktif";
+import { useDispatch } from "react-redux";
+import { SetLoadingGeneral } from "@/redux/Loading/slice";
 
 type GroupedData = {
   category: string;
@@ -34,7 +34,8 @@ export const OverlaySHP: FC = () => {
       legends: LegendsType[];
     }[]
   >();
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  // useDispatch
+  const dispatch = useDispatch();
 
   // function
   const groupByCategory = (data: DataWebserviceByGeom2[]): GroupedData[] => {
@@ -57,6 +58,7 @@ export const OverlaySHP: FC = () => {
 
   const loadIntersect = async (id: number[], callback: () => void) => {
     try {
+      dispatch(SetLoadingGeneral(true));
       if (IdLayerService !== "" && id.length > 0) {
         const { data, status } = await postAPIWebServiceIntersect({
           // IdLayerService,
@@ -71,6 +73,8 @@ export const OverlaySHP: FC = () => {
       }
     } catch (err) {
       console.error("Error loading intersect data:", err);
+    } finally {
+      dispatch(SetLoadingGeneral(false));
     }
   };
 
@@ -166,7 +170,10 @@ export const OverlaySHP: FC = () => {
     for (let i = 0; i < properties.length; i++) {
       for (let j = 0; j < properties[i].length; j++) {
         // Jika Value adalah angka, maka tambahkan ke processedData
-        if (!isNaN(Number(properties[i][j].Value)) && properties[i][j].Key.toLowerCase().includes('luas')) {
+        if (
+          !isNaN(Number(properties[i][j].Value)) &&
+          properties[i][j].Key.toLowerCase().includes("luas")
+        ) {
           processedData += Number(properties[i][j].Value);
         }
       }
@@ -213,9 +220,13 @@ export const OverlaySHP: FC = () => {
                                 return (
                                   <td
                                     key={index}
-                                    className="border border-gray-300 px-4 py-2"
+                                    className={cn([
+                                      "border border-gray-300 px-4 py-2",
+                                      !isNaN(Number(item.Value)) &&
+                                        "text-right",
+                                    ])}
                                   >
-                                    {item.Value}
+                                    {formatNumber(item.Value)}
                                   </td>
                                 );
                               })}
@@ -226,8 +237,8 @@ export const OverlaySHP: FC = () => {
                           <td className="border border-gray-300 px-4 py-2 text-center font-bold">
                             Total
                           </td>
-                          <td className="border border-gray-300 px-4 py-2 text-center">
-                            {processProperties(item.properties)}
+                          <td className="border border-gray-300 px-4 py-2 text-right">
+                            {formatNumber(processProperties(item.properties))}
                           </td>
                         </tr>
                       </tbody>
