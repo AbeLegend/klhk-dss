@@ -11,6 +11,10 @@ export interface DataWebserviceByGeom {
   WebService: WebServiceModel
   Properties: PropertiesModel[]
 }
+export interface DataWebserviceByGeom2 {
+  WebService: WebServiceModel
+  Properties: PropertiesModel[][]
+}
 export interface UriTitleMapType {
   isActive: boolean;
   isUsed: boolean;

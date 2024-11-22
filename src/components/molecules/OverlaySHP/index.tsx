@@ -11,11 +11,14 @@ import {
 } from "@/lib";
 import { useAppSelector } from "@/redux/store";
 import { postAPIWebServiceIntersect } from "@/api/responses";
-import { DataWebserviceByGeom } from "@/redux/Map/MapInteraktif";
+import {
+  DataWebserviceByGeom,
+  DataWebserviceByGeom2,
+} from "@/redux/Map/MapInteraktif";
 
 type GroupedData = {
   category: string;
-  properties: PropertiesType[];
+  properties: PropertiesType[][];
   legends: LegendsType[];
 };
 
@@ -27,15 +30,15 @@ export const OverlaySHP: FC = () => {
   const [data, setData] = useState<
     {
       category: string;
-      properties: PropertiesType[];
+      properties: PropertiesType[][];
       legends: LegendsType[];
     }[]
   >();
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   // function
-  const groupByCategory = (data: DataWebserviceByGeom[]): GroupedData[] => {
-    const grouped: Record<string, PropertiesType[]> = {};
+  const groupByCategory = (data: DataWebserviceByGeom2[]): GroupedData[] => {
+    const grouped: Record<string, PropertiesType[][]> = {};
 
     data.forEach((item) => {
       const category = item.WebService.Category;
@@ -56,7 +59,7 @@ export const OverlaySHP: FC = () => {
     try {
       if (IdLayerService !== "" && id.length > 0) {
         const { data, status } = await postAPIWebServiceIntersect({
-          IdLayerService,
+          // IdLayerService,
           IdWebService: id,
         });
         if (status === 200 || status === 201) {
@@ -194,62 +197,43 @@ export const OverlaySHP: FC = () => {
                     <table className="w-full border border-gray-300 text-sm text-left">
                       <thead>
                         <tr className="bg-green-100">
-                          <th className="border border-gray-300 px-4 py-2 font-bold text-center">
-                            Fungsi {item.category}
-                          </th>
-                          <th className="border border-gray-300 px-4 py-2 font-bold text-center">
-                            Luas (Ha)
-                          </th>
+                          {item.properties[0].map((item, index) => {
+                            return (
+                              <th
+                                className="border border-gray-300 px-4 py-2 font-bold text-center"
+                                key={index}
+                              >
+                                {item.Key}
+                              </th>
+                            );
+                          })}
                         </tr>
                       </thead>
                       <tbody>
-                        {processProperties(item.properties).map(
-                          (prop, indexProp) => {
-                            const matchingLegend = item.legends.find((legend) =>
-                              prop.fungsi
-                                .toLowerCase()
-                                .includes(legend.label.toLowerCase())
-                            );
-
-                            return (
-                              <tr key={indexProp}>
-                                {/* Kolom Fungsi */}
-                                <td className="border border-gray-300 px-4 py-2">
-                                  {prop.fungsi}
-                                  {matchingLegend ? (
-                                    <img
-                                      src={`data:image/png;base64,${matchingLegend.imageData}`}
-                                      alt={matchingLegend.label}
-                                      className="w-6 h-6 mx-auto"
-                                    />
-                                  ) : (
-                                    <div
-                                      // src={`data:image/png;base64,${matchingLegend.imageData}`}
-                                      // alt={matchingLegend.label}
-                                      className="w-6 h-6 mx-auto bg-white border"
-                                    />
-                                  )}
-                                </td>
-                                {/* Kolom Luas */}
-                                <td className="border border-gray-300 px-4 py-2 text-center">
-                                  {prop.luas} {/* Menampilkan angka penuh */}
-                                </td>
-                              </tr>
-                            );
-                          }
-                        )}
-
-                        {/* Baris Total */}
+                        {item.properties.map((i, ix) => {
+                          return (
+                            <tr key={ix}>
+                              {i.map((item, index) => {
+                                return (
+                                  <td
+                                    key={index}
+                                    className="border border-gray-300 px-4 py-2"
+                                  >
+                                    {item.Value}
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          );
+                        })}
                         <tr>
                           <td className="border border-gray-300 px-4 py-2 text-center font-bold">
                             Total
                           </td>
                           <td className="border border-gray-300 px-4 py-2 text-center">
-                            {processProperties(item.properties).reduce(
-                              (total, prop) => total + prop.luas,
-                              0
-                            )}{" "}
-                            {/* Menampilkan total angka penuh */}
+                            {processProperties(item.properties[index])
+                              .filter((filter) => filter.luas)
+                              .reduce((total, prop) => total + prop.luas, 0)}
                           </td>
                         </tr>
                       </tbody>

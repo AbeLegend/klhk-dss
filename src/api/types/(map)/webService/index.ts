@@ -51,6 +51,12 @@ export interface WebServiceGetPropertiesByGeomResponse extends BaseResponse {
     Properties: PropertiesModel[]
   }[]
 }
+export interface WebServiceGetPropertiesByGeomResponse2 extends BaseResponse {
+  Data: {
+    WebService: WebServiceModel
+    Properties: PropertiesModel[][]
+  }[]
+}
 // END: WebServiceWithProperties
 export interface WebServiceAllUriTitleResponse extends BaseResponse {
   Data: {

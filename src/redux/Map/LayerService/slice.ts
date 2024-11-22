@@ -17,6 +17,7 @@ interface LayerServiceModel {
   geom: string;
   data: DataType | null; // useless
   isShpMode: boolean;
+  isHardcodeMode: boolean;
   IdLayerService: string;
 
 }
@@ -25,7 +26,8 @@ const initialState: LayerServiceModel = {
   geom: "",
   data: null,
   isShpMode: false,
-  IdLayerService: ""
+  IdLayerService: "",
+  isHardcodeMode: false,
 };
 
 export const layerServiceSlice = createSlice({

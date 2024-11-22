@@ -2,7 +2,7 @@
 import axios, { AxiosResponse, AxiosError } from "axios";
 // local - api
 import { fetch } from "@/api/services";
-import { WebServiceAllByUriTitleResponse, WebServiceAllResponse, WebServiceAllUriTitleResponse, WebServiceGetPropertiesByGeomResponse } from "@/api/types";
+import { WebServiceAllByUriTitleResponse, WebServiceAllResponse, WebServiceAllUriTitleResponse, WebServiceGetPropertiesByGeomResponse, WebServiceGetPropertiesByGeomResponse2 } from "@/api/types";
 
 
 
@@ -88,9 +88,9 @@ export async function getAPIWebServiceByGeom(): Promise<AxiosResponse<WebService
   }
 }
 export async function postAPIWebServiceIntersect(data: {
-  IdLayerService: string;
+  IdLayerService?: string;
   IdWebService: number[]
-}): Promise<AxiosResponse<WebServiceGetPropertiesByGeomResponse>> {
+}): Promise<AxiosResponse<WebServiceGetPropertiesByGeomResponse2>> {
   try {
     const res = await fetch.post("/WebService/intersect", data)
     return res;
