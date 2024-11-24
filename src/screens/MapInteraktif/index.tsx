@@ -33,7 +33,7 @@ export const MapInteraktifScreen: FC = () => {
   const sidebarRef = useRef<{ triggerAction: () => void }>(null);
   // useAppSelector
   const IsLoading = useAppSelector((state) => state.loading);
-  const { IsShowOverlay } = useAppSelector((state) => state.layer);
+  // const { IsShowOverlay } = useAppSelector((state) => state.layer);
   // handle
   const handleTriggerSidebarAction = () => {
     sidebarRef.current?.triggerAction();
@@ -52,7 +52,7 @@ export const MapInteraktifScreen: FC = () => {
           </div>
         )}
         <OverlayWidget />
-        {IsShowOverlay && <OverlaySHP />}
+        <OverlaySHP />
         <FloatNavbar searchWidget={searchWidget} />
         <Sidebar ref={sidebarRef} />
       </MapComponent>

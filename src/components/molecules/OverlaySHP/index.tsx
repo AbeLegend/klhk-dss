@@ -89,14 +89,14 @@ export const OverlaySHP: FC = () => {
 
   const handleSwitch = (e: boolean) => {
     dispatch(SetIsSummary(e));
-    if (IsShowOverlay) {
-      if (IsSummary) {
-        dispatch(SetTriggerIntersect(true));
-      } else {
-        dispatch(SetTriggerGetPropertiesByGeom(true));
-      }
+
+    if (e) {
+      dispatch(SetTriggerIntersect(true));
+    } else {
+      dispatch(SetTriggerGetPropertiesByGeom(true));
     }
   };
+
   const loadIntersect = async () =>
     // callback: () => void
     {
@@ -262,6 +262,23 @@ export const OverlaySHP: FC = () => {
       loadIntersect();
     }
   }, [IsSummary, IsLoadingOverlay, IsShowOverlay, IsTriggerIntersect]);
+
+  useEffect(() => {
+    console.log({
+      IsSummary,
+      IsLoadingOverlay,
+      IsShowOverlay,
+      IsTriggerIntersect,
+      IsTriggerGetPropertiesByGeom,
+    });
+  }, [
+    IsSummary,
+    IsLoadingOverlay,
+    IsShowOverlay,
+    IsTriggerIntersect,
+    IsTriggerGetPropertiesByGeom,
+  ]);
+
   // GEOM
   useEffect(() => {
     if (
@@ -278,10 +295,6 @@ export const OverlaySHP: FC = () => {
     IsShowOverlay,
     IsTriggerGetPropertiesByGeom,
   ]);
-
-  useEffect(() => {
-    console.log({ IsSummary });
-  }, [IsSummary]);
 
   const processProperties = (properties: PropertiesType[][]) => {
     let processedData: number = 0;
@@ -306,6 +319,7 @@ export const OverlaySHP: FC = () => {
     <div
       className={cn([
         "absolute left-[5%] top-[20%] w-[35%] max-h-[75vh] bg-white shadow-medium p-4 rounded-2xl",
+        !IsShowOverlay && "hidden",
       ])}
     >
       <div className="flex gap-x-2 items-center mb-4">
@@ -407,8 +421,7 @@ export const OverlaySHP: FC = () => {
           ) : (
             // All Data Here
             <div className="grid gap-y-4">
-              {geomData &&
-                geomData.length > 0 &&
+              {geomData && geomData.length > 0 ? (
                 geomData.map((item, index) => {
                   return (
                     <Accordion
@@ -473,7 +486,12 @@ export const OverlaySHP: FC = () => {
                       </div>
                     </Accordion>
                   );
-                })}
+                })
+              ) : (
+                <div>
+                  <p className="text-body-3 text-center">Tidak ada data</p>
+                </div>
+              )}
             </div>
           )}
         </div>

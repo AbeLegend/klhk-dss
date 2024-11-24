@@ -1,6 +1,6 @@
 "use client";
 // lib
-import { FC } from "react";
+import { FC, useEffect } from "react";
 import { useDispatch } from "react-redux";
 // local
 import { cn } from "@/lib";
