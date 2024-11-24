@@ -55,3 +55,17 @@ export interface LayerServiceByIdResponse extends BaseResponse {
 export interface PostLayerServiceResponse extends BaseResponse {
   Data: string
 }
+
+// GEOM 
+export interface LayerServiceGeomModel {
+  Title: string,
+  Attributes: {
+    Key: string,
+    Value: string,
+    Index: number
+  }[][],
+}
+
+export interface LayerServiceGeomResponse extends BaseResponse {
+  Data: LayerServiceGeomModel[]
+}

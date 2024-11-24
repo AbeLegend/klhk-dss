@@ -16,18 +16,29 @@ interface DataType {
 interface LayerServiceModel {
   geom: string;
   data: DataType | null; // useless
-  isShpMode: boolean;
-  isHardcodeMode: boolean;
+  IsSummary: boolean;
+  IsShowOverlay: boolean;
+  IsLoadingOverlay: boolean;
   IdLayerService: string;
+  IdLayerServices: string[];
+  IdWebServices: number[];
+  IsTriggerIntersect: boolean;
+  IsTriggerGetPropertiesByGeom: boolean;
 
 }
 
 const initialState: LayerServiceModel = {
   geom: "",
   data: null,
-  isShpMode: false,
+  IsSummary: true,
+  IsShowOverlay: false,
+  IsLoadingOverlay: false,
   IdLayerService: "",
-  isHardcodeMode: false,
+  IdLayerServices: [],
+  IdWebServices: [],
+  IsTriggerIntersect: false,
+  IsTriggerGetPropertiesByGeom: false
+
 };
 
 export const layerServiceSlice = createSlice({
@@ -37,62 +48,45 @@ export const layerServiceSlice = createSlice({
     SetGeom(state, action: PayloadAction<string>) {
       state.geom = action.payload;
     },
-    SetLayerService(state, action: PayloadAction<DataType>) {
-      if (state.data === null) {
-        // Jika data masih null, langsung set data
-        state.data = action.payload;
-      } else {
-        // Jika data sudah ada, update data
-        state.data = {
-          ...state.data,
-          coordinate: {
-            lat: action.payload.coordinate.lat ?? state.data.coordinate.lat,
-            long: action.payload.coordinate.long ?? state.data.coordinate.long,
-          }, // Perbarui coordinate hanya jika ada nilai baru
-          layers: [
-            ...state.data.layers,
-            ...action.payload.layers.filter(
-              newLayer => !state.data?.layers.some(existingLayer => existingLayer.layerName === newLayer.layerName)
-            ),
-          ], // Tambahkan layers baru tanpa menduplikasi
-        };
-      }
+    SetIsSummary(state, action: PayloadAction<boolean>) {
+      state.IsSummary = action.payload;
     },
-    RemoveLayer(state, action: PayloadAction<string>) {
-      // Periksa jika data ada
-      if (state.data) {
-        state.data.layers = state.data.layers.filter(
-          (layer) => layer.layerName !== action.payload
-        );
-      }
+    SetIsShowOverlay(state, action: PayloadAction<boolean>) {
+      state.IsShowOverlay = action.payload;
     },
-    UpdateCoordinate(
-      state,
-      action: PayloadAction<{ lat: number | null; long: number | null }>
-    ) {
-      if (state.data) {
-        state.data.coordinate = {
-          lat: action.payload.lat ?? state.data.coordinate.lat,
-          long: action.payload.long ?? state.data.coordinate.long,
-        };
-      }
-    },
-    SetShpMode(state, action: PayloadAction<boolean>) {
-      state.isShpMode = action.payload;
+    SetIsLoadingOverlay(state, action: PayloadAction<boolean>) {
+      state.IsLoadingOverlay = action.payload;
     },
     SetIdLayerService(state, action: PayloadAction<string>) {
       state.IdLayerService = action.payload;
     },
+    SetIdLayerServices(state, action: PayloadAction<string[]>) {
+      state.IdLayerServices = action.payload;
+    },
+    SetIdWebServices(state, action: PayloadAction<number[]>) {
+      state.IdWebServices = action.payload;
+    },
+    SetTriggerIntersect(state, action: PayloadAction<boolean>) {
+      state.IsTriggerIntersect = action.payload;
+    },
+    SetTriggerGetPropertiesByGeom(state, action: PayloadAction<boolean>) {
+      state.IsTriggerGetPropertiesByGeom = action.payload;
+    },
+
   },
 });
 
 export const {
   SetGeom,
-  SetLayerService,
-  RemoveLayer,
-  UpdateCoordinate,
-  SetShpMode,
-  SetIdLayerService
+  SetIsSummary,
+  SetIsShowOverlay,
+  SetIsLoadingOverlay,
+  SetIdLayerService,
+  SetIdLayerServices,
+  SetIdWebServices,
+  // 
+  SetTriggerIntersect,
+  SetTriggerGetPropertiesByGeom
 } = layerServiceSlice.actions;
 
 export default layerServiceSlice.reducer;

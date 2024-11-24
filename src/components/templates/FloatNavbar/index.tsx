@@ -25,7 +25,7 @@ import { SetLoadingGeneral } from "@/redux/Loading/slice";
 import {
   SetGeom,
   SetIdLayerService,
-  SetShpMode,
+  SetIdLayerServices,
 } from "@/redux/Map/LayerService/slice";
 
 // type
@@ -61,8 +61,9 @@ export const FloatNavbar: FC<FloatNavbarProps> = ({ searchWidget }) => {
     try {
       const { data, status } = await postAPILayerServiceUploadSHP(fileData);
       if (status === 200 || status === 201) {
-        dispatch(SetShpMode(true));
         dispatch(SetIdLayerService(data.Data));
+
+        dispatch(SetIdLayerServices([data.Data]));
         getLayerServiceById(data.Data);
       }
     } catch (err) {

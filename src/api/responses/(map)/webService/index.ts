@@ -89,7 +89,7 @@ export async function getAPIWebServiceByGeom(): Promise<AxiosResponse<WebService
 }
 export async function postAPIWebServiceIntersect(data: {
   IdLayerService?: string;
-  IdWebService: number[]
+  IdWebService?: number[]
 }): Promise<AxiosResponse<WebServiceGetPropertiesByGeomResponse2>> {
   try {
     const res = await fetch.post("/WebService/intersect", data)

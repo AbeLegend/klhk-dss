@@ -1,5 +1,8 @@
 // lib
 import { FC, useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
+import Switch from "react-switch";
+
 // local
 import {
   cn,
@@ -11,10 +14,23 @@ import {
   removeUrlEndingNumber,
 } from "@/lib";
 import { useAppSelector } from "@/redux/store";
-import { postAPIWebServiceIntersect } from "@/api/responses";
+import {
+  postAPILayerServiceGetPropertiesByGeom,
+  postAPIWebServiceIntersect,
+} from "@/api/responses";
 import { DataWebserviceByGeom2 } from "@/redux/Map/MapInteraktif";
-import { useDispatch } from "react-redux";
-import { SetLoadingGeneral } from "@/redux/Loading/slice";
+import {
+  SetIdWebServices,
+  SetIsLoadingOverlay,
+  SetIsShowOverlay,
+  SetIsSummary,
+  SetTriggerGetPropertiesByGeom,
+  SetTriggerIntersect,
+} from "@/redux/Map/LayerService/slice";
+import { LoadingAnimation } from "@/components/atoms";
+import { HiOutlineX } from "react-icons/hi";
+import { LayerServiceGeomModel } from "@/api/types";
+import { Accordion } from "../Accordion";
 
 type GroupedData = {
   category: string;
@@ -24,8 +40,17 @@ type GroupedData = {
 
 export const OverlaySHP: FC = () => {
   // useAppSelector
-  const { layer } = useAppSelector((state) => state.mapInteraktif);
-  const { isShpMode, IdLayerService } = useAppSelector((state) => state.layer);
+  const { layer, location } = useAppSelector((state) => state.mapInteraktif);
+  const {
+    IdLayerService,
+    IsShowOverlay,
+    IsSummary,
+    IsLoadingOverlay,
+    IdWebServices,
+    IdLayerServices,
+    IsTriggerGetPropertiesByGeom,
+    IsTriggerIntersect,
+  } = useAppSelector((state) => state.layer);
   // useState
   const [data, setData] = useState<
     {
@@ -34,6 +59,12 @@ export const OverlaySHP: FC = () => {
       legends: LegendsType[];
     }[]
   >();
+  const [geomData, setGeomData] = useState<LayerServiceGeomModel[]>([]);
+  const [openAccordion, setOpenAccordion] = useState<string | null>(null);
+
+  const handleToggle = (id: string) => {
+    setOpenAccordion((prev) => (prev === id ? null : id));
+  };
   // useDispatch
   const dispatch = useDispatch();
 
@@ -56,27 +87,88 @@ export const OverlaySHP: FC = () => {
     }));
   };
 
-  const loadIntersect = async (id: number[], callback: () => void) => {
-    try {
-      dispatch(SetLoadingGeneral(true));
-      if (IdLayerService !== "" && id.length > 0) {
-        const { data, status } = await postAPIWebServiceIntersect({
-          // IdLayerService,
-          IdWebService: id,
-        });
-        if (status === 200 || status === 201) {
-          const groupedData = groupByCategory(data.Data);
-          console.log("Grouped Data:", groupedData);
-          setData(groupedData);
-          callback();
-        }
+  const handleSwitch = (e: boolean) => {
+    dispatch(SetIsSummary(e));
+    if (IsShowOverlay) {
+      if (IsSummary) {
+        dispatch(SetTriggerIntersect(true));
+      } else {
+        dispatch(SetTriggerGetPropertiesByGeom(true));
       }
-    } catch (err) {
-      console.error("Error loading intersect data:", err);
-    } finally {
-      dispatch(SetLoadingGeneral(false));
     }
   };
+  const loadIntersect = async () =>
+    // callback: () => void
+    {
+      try {
+        // dispatch(SetLoadingGeneral(true));
+        dispatch(SetIsLoadingOverlay(true));
+
+        let formData: { IdLayerService?: string; IdWebService?: number[] } = {};
+        if (IdLayerService) {
+          formData.IdLayerService = IdLayerService;
+        }
+        if (IdWebServices.length > 0) {
+          formData.IdWebService = IdWebServices;
+        }
+        const { data, status } = await postAPIWebServiceIntersect(formData);
+        if (status === 200 || status === 201) {
+          const groupedData = groupByCategory(data.Data);
+          // console.log("Grouped Data:", groupedData);
+          setData(groupedData);
+          // callback(); // buat loadlegends
+        }
+      } catch (err) {
+        console.error("Error loading intersect data:", err);
+      } finally {
+        // dispatch(SetLoadingGeneral(false));
+        dispatch(SetTriggerIntersect(false));
+        dispatch(SetIsLoadingOverlay(false));
+      }
+    };
+
+  const loadPropertiesByGeom = async () =>
+    // callback: () => void
+
+    {
+      try {
+        dispatch(SetIsLoadingOverlay(true));
+
+        let formData: {
+          Latitude: string;
+          Longitude: string;
+          IdLayerService?: string[];
+          IdWebService?: number[];
+        } = {
+          Latitude: `${location.latitude}`,
+          Longitude: `${location.longitude}`,
+          IdLayerService: [],
+          IdWebService: [],
+        };
+        if (IdLayerServices.length > 0) {
+          formData.IdLayerService = IdLayerServices;
+        }
+        if (IdWebServices.length > 0) {
+          formData.IdWebService = IdWebServices;
+        }
+        const { data, status } = await postAPILayerServiceGetPropertiesByGeom(
+          formData
+        );
+        if (status === 200 || status === 201) {
+          setGeomData(data.Data);
+          console.log("DATA GEOM OVERLAY", data);
+          // const groupedData = groupByCategory(data.Data);
+          // console.log("Grouped Data:", groupedData);
+          // setData(groupedData);
+          // callback(); // buat loadlegends
+        }
+      } catch (err) {
+        console.error("Error loading intersect data:", err);
+      } finally {
+        dispatch(SetTriggerGetPropertiesByGeom(false));
+        dispatch(SetIsLoadingOverlay(false));
+      }
+    };
 
   const loadLegends = async () => {
     try {
@@ -144,9 +236,9 @@ export const OverlaySHP: FC = () => {
   };
 
   // useEffect
-  useEffect(() => {
-    console.log(data);
-  }, [data]);
+  // useEffect(() => {
+  //   console.log(data);
+  // }, [data]);
   useEffect(() => {
     if (layer) {
       let ids: number[] = [];
@@ -160,9 +252,37 @@ export const OverlaySHP: FC = () => {
             })
           );
         });
-      loadIntersect(ids, loadLegends);
+      dispatch(SetIdWebServices(ids));
     }
   }, [layer]);
+
+  // INTERSECT
+  useEffect(() => {
+    if (IsSummary && !IsLoadingOverlay && IsShowOverlay && IsTriggerIntersect) {
+      loadIntersect();
+    }
+  }, [IsSummary, IsLoadingOverlay, IsShowOverlay, IsTriggerIntersect]);
+  // GEOM
+  useEffect(() => {
+    if (
+      !IsSummary &&
+      !IsLoadingOverlay &&
+      IsShowOverlay &&
+      IsTriggerGetPropertiesByGeom
+    ) {
+      loadPropertiesByGeom();
+    }
+  }, [
+    IsSummary,
+    IsLoadingOverlay,
+    IsShowOverlay,
+    IsTriggerGetPropertiesByGeom,
+  ]);
+
+  useEffect(() => {
+    console.log({ IsSummary });
+  }, [IsSummary]);
+
   const processProperties = (properties: PropertiesType[][]) => {
     let processedData: number = 0;
 
@@ -183,72 +303,181 @@ export const OverlaySHP: FC = () => {
   };
 
   return (
-    isShpMode && (
-      <div
-        className={cn([
-          "absolute left-[1.5%] top-[20%] w-[35%] max-h-[75vh] bg-white shadow-medium p-4 rounded-2xl overflow-y-scroll overflow-x-scroll",
-          (!data || data.length == 0) && "hidden",
-        ])}
-      >
-        <div className="grid gap-y-3">
-          {data &&
-            data.length > 0 &&
-            data.map((item, index) => {
-              return (
-                <div key={index} className="">
-                  <div className="overflow-x-auto">
-                    <table className="w-full border border-gray-300 text-sm text-left">
-                      <thead>
-                        <tr className="bg-green-100">
-                          {item.properties[0].map((item, index) => {
-                            return (
-                              <th
-                                className="border border-gray-300 px-4 py-2 font-bold text-center"
-                                key={index}
-                              >
-                                {item.Key}
-                              </th>
-                            );
-                          })}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {item.properties.map((i, ix) => {
-                          return (
-                            <tr key={ix}>
-                              {i.map((item, index) => {
+    <div
+      className={cn([
+        "absolute left-[5%] top-[20%] w-[35%] max-h-[75vh] bg-white shadow-medium p-4 rounded-2xl",
+      ])}
+    >
+      <div className="flex gap-x-2 items-center mb-4">
+        <p>Tampilkan hanya summary</p>
+        <Switch
+          className={cn([IsLoadingOverlay, "cursor-wait"])}
+          disabled={IsLoadingOverlay}
+          uncheckedIcon={false}
+          checkedIcon={false}
+          onColor="#C5900C"
+          checked={IsSummary}
+          onChange={handleSwitch}
+        />
+      </div>
+      <div className="">
+        <div className="h-fit max-h-[60vh] overflow-y-scroll overflow-x-scroll">
+          {IsSummary ? (
+            IsLoadingOverlay ? (
+              <div className="flex justify-center text-center">
+                <LoadingAnimation />
+              </div>
+            ) : (
+              // Summary Data Here
+              <div className="grid gap-y-3">
+                {data && data.length > 0 ? (
+                  data.map((item, index) => {
+                    return (
+                      <div key={index} className="">
+                        <div className="overflow-x-auto">
+                          <table className="w-full border border-gray-300 text-sm text-left">
+                            <thead>
+                              <tr className="bg-primary">
+                                {item.properties[0].map((item, index) => {
+                                  return (
+                                    <th
+                                      className="border border-gray-300 px-4 py-2 text-white font-bold text-center"
+                                      key={index}
+                                    >
+                                      {item.Key}
+                                    </th>
+                                  );
+                                })}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {item.properties.map((i, ix) => {
                                 return (
-                                  <td
-                                    key={index}
-                                    className={cn([
-                                      "border border-gray-300 px-4 py-2",
-                                      !isNaN(Number(item.Value)) &&
-                                        "text-right",
-                                    ])}
+                                  <tr key={ix}>
+                                    {i.map((items, index) => {
+                                      return (
+                                        <td
+                                          key={index}
+                                          className={cn([
+                                            "border border-gray-300 px-4 py-2",
+                                            !isNaN(Number(items.Value)) &&
+                                              "text-right",
+                                          ])}
+                                        >
+                                          {!isNaN(Number(items.Value))
+                                            ? formatNumber(items.Value)
+                                            : items.Value}
+                                        </td>
+                                      );
+                                    })}
+                                  </tr>
+                                );
+                              })}
+                              {/* Baris total */}
+                              <tr>
+                                <td
+                                  colSpan={item.properties[0].length - 1}
+                                  className="border border-gray-300 px-4 py-2 text-center font-bold"
+                                >
+                                  Total
+                                </td>
+                                <td className="border border-gray-300 px-4 py-2 text-right">
+                                  {formatNumber(
+                                    processProperties(item.properties)
+                                  )}
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div>
+                    <p className="text-body-3 text-center">Tidak ada data</p>
+                  </div>
+                )}
+              </div>
+            )
+          ) : IsLoadingOverlay ? (
+            <div className="flex justify-center text-center">
+              <LoadingAnimation />
+            </div>
+          ) : (
+            // All Data Here
+            <div className="grid gap-y-4">
+              {geomData &&
+                geomData.length > 0 &&
+                geomData.map((item, index) => {
+                  return (
+                    <Accordion
+                      key={index}
+                      title={item.Title}
+                      isOpen={openAccordion === `${index}`}
+                      onToggle={() => handleToggle(`${index}`)}
+                    >
+                      <div className="overflow-x-auto">
+                        <table className="w-full border border-gray-300 text-sm text-left">
+                          <thead>
+                            <tr className="bg-primary">
+                              {item.Attributes[0].map((item2, index2) => {
+                                return (
+                                  <th
+                                    className="border border-gray-300 px-4 py-2 text-white font-bold text-center"
+                                    key={index2}
                                   >
-                                    {formatNumber(item.Value)}
-                                  </td>
+                                    {item2.Key}
+                                  </th>
                                 );
                               })}
                             </tr>
-                          );
-                        })}
-                        <tr>
-                          <td className="border border-gray-300 px-4 py-2 text-center font-bold">
-                            Total
-                          </td>
-                          <td className="border border-gray-300 px-4 py-2 text-right">
-                            {formatNumber(processProperties(item.properties))}
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              );
-            })}
+                          </thead>
+                          <tbody>
+                            {item.Attributes.map((item2, index2) => {
+                              return (
+                                <tr key={index2}>
+                                  {item2.map((item3, index3) => {
+                                    return (
+                                      <td
+                                        key={index3}
+                                        className={cn([
+                                          "border border-gray-300 px-4 py-2",
+                                          !isNaN(Number(item3.Value)) &&
+                                            "text-right",
+                                        ])}
+                                      >
+                                        {!isNaN(Number(item3.Value))
+                                          ? formatNumber(item3.Value)
+                                          : item3.Value}
+                                      </td>
+                                    );
+                                  })}
+                                </tr>
+                              );
+                            })}
+                            {/* Baris total */}
+                            {/* <tr>
+                        <td
+                          colSpan={item.Attributes[0].length - 1}
+                          className="border border-gray-300 px-4 py-2 text-center font-bold"
+                        >
+                          Total
+                        </td>
+                        <td className="border border-gray-300 px-4 py-2 text-right">
+                          {formatNumber(processProperties(item.Attributes))}
+                        </td>
+                      </tr> */}
+                          </tbody>
+                        </table>
+                      </div>
+                    </Accordion>
+                  );
+                })}
+            </div>
+          )}
         </div>
       </div>
-    )
+    </div>
   );
 };

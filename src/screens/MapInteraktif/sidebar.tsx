@@ -47,6 +47,10 @@ import { ContainerData, ContainerInformation } from "@/components/molecules";
 import LocationCrosshairsSVG from "@/icons/location-crosshairs.svg";
 import { hardcoded } from "./hardcoded";
 import { WebServiceGroupModel, WebServiceModel } from "@/api/types";
+import {
+  SetTriggerGetPropertiesByGeom,
+  SetTriggerIntersect,
+} from "@/redux/Map/LayerService/slice";
 
 interface IsLoadingType {
   allUriTitle: boolean;
@@ -79,12 +83,12 @@ interface GroupCategoryProps {
 interface WebServicePropertiesModel {
   title: string;
   timeSeries: number;
-  property: PropertiesModel[];
+  property: PropertiesModel[][];
 }
 interface AllDataDataProps {
   category: string;
   groupCategory: string;
-  properties: PropertiesModel[];
+  properties: PropertiesModel[][];
   webServiceProperties: WebServicePropertiesModel[];
 }
 
@@ -120,6 +124,16 @@ export const Sidebar = forwardRef((_, ref) => {
   const { location, isOpenModal, layer } = useAppSelector(
     (state) => state.mapInteraktif
   );
+  const {
+    IdLayerService,
+    IdLayerServices,
+    IdWebServices,
+    IsLoadingOverlay,
+    IsShowOverlay,
+    IsSummary,
+    IsTriggerGetPropertiesByGeom,
+    IsTriggerIntersect,
+  } = useAppSelector((state) => state.layer);
 
   // useRef
   const divRef = useRef<HTMLDivElement>(null);
@@ -232,6 +246,7 @@ export const Sidebar = forwardRef((_, ref) => {
       setIsLoading((value) => ({ ...value, byAllUriTitle: false }));
     }
   };
+
   const loadWebServiceAll = async () => {
     try {
       setIsLoading((value) => ({ ...value, webServiceAll: true }));
@@ -539,7 +554,7 @@ export const Sidebar = forwardRef((_, ref) => {
         >
           <HiOutlineX className="w-5 h-5 text-gray-700" />
         </div>
-        <div className="h-fit max-h-[75vh] overflow-y-scroll">
+        <div className="h-fit max-h-[71vh] overflow-y-scroll">
           <div className="grid gap-y-6 h-fit pb-8">
             {/* location */}
             <div
@@ -744,51 +759,48 @@ export const Sidebar = forwardRef((_, ref) => {
                                 title={item.category}
                                 key={index}
                               >
-                                <ContainerData
-                                  isLoading={isLoading.getPropertiesByGeom}
-                                  containerClassName={cn([
-                                    "grid-cols-2",
-                                    ThreeGrid && "grid-cols-3",
-                                    // FourGrid && "grid-cols-4",
-                                    item.category === "Deforestasi" &&
-                                      "grid-cols-2",
-                                  ])}
-                                  //
-                                  // descriptionClassName={cn([
-                                  //   TwoGrid && "justify-self-end",
-                                  // ])}
-                                  // titleClassName={cn(["justify-self-end"])}
-                                  //
-                                  data={item.properties.map(
-                                    (property, indexProperty) => {
-                                      if (item.category === "Deforestasi") {
-                                        return {
-                                          dataClassName: `${cn([
-                                            item.category === "Deforestasi" &&
-                                              "col-span-1",
-                                          ])}`,
-                                          title:
-                                            indexProperty === 0 ||
-                                            indexProperty === 1
-                                              ? property.Key
-                                              : "",
-                                          description:
-                                            property.Value === ""
-                                              ? "-"
-                                              : formatNumber(property.Value),
-                                        };
-                                      } else {
-                                        return {
-                                          title: property.Key,
-                                          description:
-                                            property.Value === ""
-                                              ? "-"
-                                              : formatNumber(property.Value),
-                                        };
-                                      }
-                                    }
-                                  )}
-                                />
+                                {item.properties.map((q, w) => {
+                                  return (
+                                    <ContainerData
+                                      key={w}
+                                      isLoading={isLoading.getPropertiesByGeom}
+                                      containerClassName={cn([
+                                        "grid-cols-2",
+                                        ThreeGrid && "grid-cols-3",
+                                        // FourGrid && "grid-cols-4",
+                                        item.category === "Deforestasi" &&
+                                          "grid-cols-2",
+                                      ])}
+                                      data={q.map((property, indexProperty) => {
+                                        if (item.category === "Deforestasi") {
+                                          return {
+                                            dataClassName: `${cn([
+                                              item.category === "Deforestasi" &&
+                                                "col-span-1",
+                                            ])}`,
+                                            title:
+                                              indexProperty === 0 ||
+                                              indexProperty === 1
+                                                ? property.Key
+                                                : "",
+                                            description:
+                                              property.Value === ""
+                                                ? "-"
+                                                : formatNumber(property.Value),
+                                          };
+                                        } else {
+                                          return {
+                                            title: property.Key,
+                                            description:
+                                              property.Value === ""
+                                                ? "-"
+                                                : formatNumber(property.Value),
+                                          };
+                                        }
+                                      })}
+                                    />
+                                  );
+                                })}
                               </ContainerInformation>
                             );
                           })}
@@ -827,27 +839,32 @@ export const Sidebar = forwardRef((_, ref) => {
                                           index !== 0 && "mt-4",
                                         ])}
                                       >
-                                        <ContainerData
-                                          isLoading={
-                                            isLoading.getPropertiesByGeom
-                                          }
-                                          containerClassName={cn([
-                                            "grid-cols-2",
-                                          ])}
-                                          data={item.property.map(
-                                            (property, indexProperty) => {
-                                              return {
-                                                title: property.Key,
-                                                description:
-                                                  property.Value === ""
-                                                    ? "-"
-                                                    : formatNumber(
-                                                        property.Value
-                                                      ),
-                                              };
-                                            }
-                                          )}
-                                        />
+                                        {item.property.map((q, w) => {
+                                          return (
+                                            <ContainerData
+                                              isLoading={
+                                                isLoading.getPropertiesByGeom
+                                              }
+                                              key={w}
+                                              containerClassName={cn([
+                                                "grid-cols-2",
+                                              ])}
+                                              data={q.map(
+                                                (property, indexProperty) => {
+                                                  return {
+                                                    title: property.Key,
+                                                    description:
+                                                      property.Value === ""
+                                                        ? "-"
+                                                        : formatNumber(
+                                                            property.Value
+                                                          ),
+                                                  };
+                                                }
+                                              )}
+                                            />
+                                          );
+                                        })}
                                       </ContainerInformation>
                                     );
                                   })}
@@ -926,7 +943,7 @@ export const Sidebar = forwardRef((_, ref) => {
                                   // ])}
                                   // titleClassName={cn(["justify-self-end"])}
                                   //
-                                  data={item.properties.map(
+                                  data={item.properties[index].map(
                                     (property, indexProperty) => {
                                       if (item.category === "Deforestasi") {
                                         return {
@@ -1032,35 +1049,33 @@ export const Sidebar = forwardRef((_, ref) => {
                           </div>
                           {allData &&
                             allData.data.map((item, index) => {
-                              const TwoGrid = item.properties.length === 2;
-                              const ThreeGrid = item.properties.length === 3;
-                              const FourGrid = item.properties.length > 3;
+                              return item.properties.map((i, j) => {
+                                const TwoGrid = i.length === 2;
+                                const ThreeGrid = i.length === 3;
+                                const FourGrid = i.length > 3;
 
-                              return (
-                                <ContainerInformation
-                                  containerClassName={cn([
-                                    index !== 0 && "mt-4",
-                                  ])}
-                                  title={item.category}
-                                  key={index}
-                                >
-                                  <ContainerData
-                                    isLoading={isLoading.getPropertiesByGeom}
-                                    containerClassName={cn([
-                                      "grid-cols-2",
-                                      ThreeGrid && "grid-cols-3",
-                                      // FourGrid && "grid-cols-4",
-                                      item.category === "Deforestasi" &&
+                                return (
+                                  <ContainerInformation
+                                    containerClassName={cn([j !== 0 && "mt-4"])}
+                                    title={item.category}
+                                    key={index}
+                                  >
+                                    <ContainerData
+                                      isLoading={isLoading.getPropertiesByGeom}
+                                      containerClassName={cn([
                                         "grid-cols-2",
-                                    ])}
-                                    //
-                                    // descriptionClassName={cn([
-                                    //   TwoGrid && "justify-self-end",
-                                    // ])}
-                                    // titleClassName={cn(["justify-self-end"])}
-                                    //
-                                    data={item.properties.map(
-                                      (property, indexProperty) => {
+                                        ThreeGrid && "grid-cols-3",
+                                        // FourGrid && "grid-cols-4",
+                                        item.category === "Deforestasi" &&
+                                          "grid-cols-2",
+                                      ])}
+                                      //
+                                      // descriptionClassName={cn([
+                                      //   TwoGrid && "justify-self-end",
+                                      // ])}
+                                      // titleClassName={cn(["justify-self-end"])}
+                                      //
+                                      data={i.map((property, indexProperty) => {
                                         if (item.category === "Deforestasi") {
                                           return {
                                             dataClassName: `${cn([
@@ -1086,11 +1101,11 @@ export const Sidebar = forwardRef((_, ref) => {
                                                 : formatNumber(property.Value),
                                           };
                                         }
-                                      }
-                                    )}
-                                  />
-                                </ContainerInformation>
-                              );
+                                      })}
+                                    />
+                                  </ContainerInformation>
+                                );
+                              });
                             })}
                         </div>
                       )}
@@ -1126,7 +1141,7 @@ export const Sidebar = forwardRef((_, ref) => {
                                                 containerClassName={cn([
                                                   "grid-cols-2",
                                                 ])}
-                                                data={item.property.map(
+                                                data={item.property[index].map(
                                                   (property, indexProperty) => {
                                                     return {
                                                       title: property.Key,
@@ -1181,7 +1196,7 @@ export const Sidebar = forwardRef((_, ref) => {
                                                 containerClassName={cn([
                                                   "grid-cols-2",
                                                 ])}
-                                                data={item.property.map(
+                                                data={item.property[index].map(
                                                   (property, indexProperty) => {
                                                     return {
                                                       title: property.Key,
@@ -1236,7 +1251,7 @@ export const Sidebar = forwardRef((_, ref) => {
                                                 containerClassName={cn([
                                                   "grid-cols-2",
                                                 ])}
-                                                data={item.property.map(
+                                                data={item.property[index].map(
                                                   (property, indexProperty) => {
                                                     return {
                                                       title: property.Key,
@@ -1291,7 +1306,7 @@ export const Sidebar = forwardRef((_, ref) => {
                                                 containerClassName={cn([
                                                   "grid-cols-2",
                                                 ])}
-                                                data={item.property.map(
+                                                data={item.property[index].map(
                                                   (property, indexProperty) => {
                                                     return {
                                                       title: property.Key,
@@ -1347,7 +1362,7 @@ export const Sidebar = forwardRef((_, ref) => {
                                                 containerClassName={cn([
                                                   "grid-cols-2",
                                                 ])}
-                                                data={item.property.map(
+                                                data={item.property[index].map(
                                                   (property, indexProperty) => {
                                                     return {
                                                       title: property.Key,

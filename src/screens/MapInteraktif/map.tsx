@@ -28,6 +28,11 @@ import {
   setIsOpenModalMap,
   setLocation,
 } from "@/redux/Map/MapInteraktif/slice";
+import {
+  SetIsShowOverlay,
+  SetTriggerGetPropertiesByGeom,
+  SetTriggerIntersect,
+} from "@/redux/Map/LayerService/slice";
 
 const MapComponent: FC<{
   children: ReactNode;
@@ -50,7 +55,13 @@ const MapComponent: FC<{
   const { layer, searchLocation } = useAppSelector(
     (state) => state.mapInteraktif
   );
-  const { geom } = useAppSelector((state) => state.layer);
+  const {
+    geom,
+    IsShowOverlay,
+    IsSummary,
+    IsTriggerGetPropertiesByGeom,
+    IsTriggerIntersect,
+  } = useAppSelector((state) => state.layer);
 
   let activePointGraphic: Graphic | null = null;
 
@@ -79,6 +90,11 @@ const MapComponent: FC<{
     await dispatch(setLocation({ latitude: lat, longitude: long }));
     // Open modal in Redux
     dispatch(setIsOpenModalMap(true));
+    console.log("INI PAS CLICK", IsSummary);
+
+    // if (!IsShowOverlay) dispatch(SetIsShowOverlay(true));
+    if (IsSummary) dispatch(SetTriggerIntersect(true));
+    if (!IsSummary) dispatch(SetTriggerGetPropertiesByGeom(true));
     // Trigger Sidebar action after location update
     onTriggerSidebar();
   };
@@ -155,12 +171,12 @@ const MapComponent: FC<{
       onSearchWidgetReady?.(search);
 
       mapView.ui.remove("zoom");
-      mapView.on("click", async (event) => {
-        const lat = event.mapPoint.latitude;
-        const long = event.mapPoint.longitude;
+      // mapView.on("click", async (event) => {
+      //   const lat = event.mapPoint.latitude;
+      //   const long = event.mapPoint.longitude;
 
-        handleMapClick(lat, long, mapView);
-      });
+      //   handleMapClick(lat, long, mapView);
+      // });
 
       mapView
         .when(() => {
@@ -187,8 +203,17 @@ const MapComponent: FC<{
 
   useEffect(() => {
     getUrlFromLayer();
-    // console.log({ layer });
+    console.log({ layer });
   }, [layer]);
+  useEffect(() => {
+    if (view) {
+      view.on("click", async (event) => {
+        const lat = event.mapPoint.latitude;
+        const long = event.mapPoint.longitude;
+        handleMapClick(lat, long, view);
+      });
+    }
+  }, [IsSummary, view]);
 
   useEffect(() => {
     if (view && geom !== "") {

@@ -11,6 +11,7 @@ import { FloatNavbar } from "@/components/templates";
 import { usePermissions } from "@/hook";
 import { useAppSelector } from "@/redux/store";
 import { OverlaySHP } from "@/components/molecules";
+import { OverlayWidget } from "@/components/atoms";
 
 // asset
 
@@ -32,6 +33,7 @@ export const MapInteraktifScreen: FC = () => {
   const sidebarRef = useRef<{ triggerAction: () => void }>(null);
   // useAppSelector
   const IsLoading = useAppSelector((state) => state.loading);
+  const { IsShowOverlay } = useAppSelector((state) => state.layer);
   // handle
   const handleTriggerSidebarAction = () => {
     sidebarRef.current?.triggerAction();
@@ -49,7 +51,8 @@ export const MapInteraktifScreen: FC = () => {
             <div className="relative bg-inherit w-14 h-14 rounded-full border-4 border-slate-600 border-b-transparent animate-spin" />
           </div>
         )}
-        <OverlaySHP />
+        <OverlayWidget />
+        {IsShowOverlay && <OverlaySHP />}
         <FloatNavbar searchWidget={searchWidget} />
         <Sidebar ref={sidebarRef} />
       </MapComponent>
